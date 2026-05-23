@@ -17,11 +17,11 @@ LET $p2 = (SELECT id FROM product WHERE name = '紫檀念珠')[0].id;
 INSERT INTO product { name: '老山檀线香', base_price: 58, category: $cat3, sync_source_id: 'demo-p3' };
 LET $p3 = (SELECT id FROM product WHERE name = '老山檀线香')[0].id;
 
-INSERT INTO product_variant { sku: 'JGJ-001', name: '标准版', spu: $p1, base_price: 28 };
-LET $v1 = (SELECT id FROM product_variant WHERE sku = 'JGJ-001')[0].id;
-INSERT INTO product_variant { sku: 'NSF-001', name: '108颗', spu: $p2, base_price: 168 };
-LET $v2 = (SELECT id FROM product_variant WHERE sku = 'NSF-001')[0].id;
-INSERT INTO product_variant { sku: 'XZS-001', name: '细支', spu: $p3, base_price: 58 };
+INSERT INTO product_variant { sku: 'JGJ-001', name: '标准版', spu: $p1, base_price: 28, sync_source_id: 'demo-v1' };
+LET $v1 = (SELECT id FROM product_variant WHERE sku = 'JGJ-001' AND spu = $p1)[0].id;
+INSERT INTO product_variant { sku: 'NSF-001', name: '108颗', spu: $p2, base_price: 168, sync_source_id: 'demo-v2' };
+LET $v2 = (SELECT id FROM product_variant WHERE sku = 'NSF-001' AND spu = $p2)[0].id;
+INSERT INTO product_variant { sku: 'XZS-001', name: '细支', spu: $p3, base_price: 58, sync_source_id: 'demo-v3' };
 
 INSERT INTO pricing { variant: $v1, price: 38 };
 INSERT INTO pricing { variant: $v2, price: 188 };

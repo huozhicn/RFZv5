@@ -66,47 +66,46 @@ export function getFetchClause(fields: FieldMeta[]): string {
   return `FETCH ${recordFields.map(f => f.name).join(', ')}`
 }
 
-// 菜单配置（从 menu-config.json 加载）
-let _menuConfig: MenuGroup[] = []
+// 菜单配置（从 menu-config.json 加载，有硬编码兜底）
+const DEFAULT_MENU: MenuGroup[] = [
+  { key: 'product', label: '商品管理', tables: [
+    { key: 'product', label: '产品SPU' },
+    { key: 'product_variant', label: '产品SKU' },
+    { key: 'product_category', label: '产品类目' },
+    { key: 'pricing', label: '定价' },
+  ]},
+  { key: 'inventory', label: '库存管理', tables: [
+    { key: 'store_inventory', label: '库存' },
+    { key: 'inventory_count', label: '盘点' },
+    { key: 'restock_request', label: '补货' },
+  ]},
+  { key: 'order', label: '订单管理', tables: [
+    { key: 'sales_order', label: '销售订单' },
+    { key: 'order_item', label: '订单明细' },
+  ]},
+  { key: 'crm', label: '客户管理', tables: [
+    { key: 'customer', label: '会员' },
+  ]},
+  { key: 'org', label: '系统管理', tables: [
+    { key: 'user', label: '用户' },
+  ]},
+]
+
+let _menuConfig: MenuGroup[] = DEFAULT_MENU
 
 export function getMenuGroups(): MenuGroup[] {
-  return _menuConfig || []
+  return _menuConfig
 }
 
 export async function loadMenuConfig(): Promise<MenuGroup[]> {
   try {
     const resp = await fetch('/v5/menu-config.json')
-    _menuConfig = await resp.json()
-    return _menuConfig
-  } catch {
-    // Fallback: hardcoded menu
-    _menuConfig = [
-      { key: 'product', label: '商品管理', tables: [
-        { key: 'product', label: '产品SPU' },
-        { key: 'product_variant', label: '产品SKU' },
-        { key: 'product_category', label: '产品类目' },
-        { key: 'pricing', label: '定价' },
-      ]},
-      { key: 'inventory', label: '库存管理', tables: [
-        { key: 'store_inventory', label: '库存' },
-        { key: 'inventory_count', label: '盘点' },
-        { key: 'restock_request', label: '补货' },
-      ]},
-      { key: 'order', label: '订单管理', tables: [
-        { key: 'sales_order', label: '销售订单' },
-        { key: 'order_item', label: '订单明细' },
-      ]},
-      { key: 'crm', label: '客户管理', tables: [
-        { key: 'customer', label: '会员' },
-      ]},
-      { key: 'org', label: '系统管理', tables: [
-        { key: 'user', label: '用户' },
-      ]},
-    ]
-    return _menuConfig
-  }
+    if (resp.ok) {
+      _menuConfig = await resp.json()
+    }
+  } catch {}
+  return _menuConfig
 }
-
 // 表名 → 中文标签
 const TABLE_LABELS: Record<string, { label: string; group: string }> = {}
 export function getTableLabel(name: string): string {
@@ -177,16 +176,27 @@ export function formatValue(value: any, field: FieldMeta): string {
 let _schemaSnapshot: Record<string, TableMeta> | null = null
 
 export async function loadSchema(token?: string): Promise<Record<string, TableMeta>> {
-  // 从 INFO FOR TABLE 逐表加载
-  const tables = getMenuGroups().flatMap(g => g.tables.map(t => t.key))
-  const result: Record<string, TableMeta> = {}
-  
-  for (const name of tables) {
-    try {
-      const info = await sdbQuery(`INFO FOR TABLE ${name}`, undefined, token)
-      const raw = Array.isArray(info) ? info[0] : info
-      if (raw) {
-        const fields = parseFieldFromInfo(raw)
+  try {
+    const resp = await fetch('/v5/schema.json')
+    if (resp.ok) {
+      const raw = await resp.json()
+      const result: Record<string, TableMeta> = {}
+      for (const [name, data] of Object.entries(raw)) {
+        const tableData = data as any
+        const fields: FieldMeta[] = (tableData.fields || []).map((f: any) => {
+          const kind = f.kind || 'string'
+          const isRecord = kind.startsWith('record<')
+          return {
+            name: f.name,
+            kind,
+            isRecord,
+            recordTarget: isRecord ? kind.match(/record<(\w+)>/)![1] : '',
+            isOption: !!(f.assert || f.default),
+            comment: f.comment || null,
+            assert: f.assert || null,
+            default: f.default || null,
+          }
+        })
         result[name] = {
           name,
           fields,
@@ -197,13 +207,12 @@ export async function loadSchema(token?: string): Promise<Record<string, TableMe
           canDelete: true,
         }
       }
-    } catch {
-      // 表可能还没创建
+      _schemaSnapshot = result
+      return result
     }
-  }
-  
-  _schemaSnapshot = result
-  return result
+  } catch {}
+  _schemaSnapshot = {}
+  return {}
 }
 
 export function getSchemaSnapshot(): Record<string, TableMeta> {

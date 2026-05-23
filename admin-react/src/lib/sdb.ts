@@ -1,6 +1,6 @@
 // SDB REST query — sends raw SQL, returns parsed result
 const NS = 'huozhi'
-const DB = 'rfzv45'
+const DB = 'rfv5_dist'
 
 function escapeVal(v: unknown): string {
   if (v === null || v === undefined) return 'NONE'

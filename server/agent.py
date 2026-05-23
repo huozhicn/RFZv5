@@ -134,7 +134,7 @@ def _extract_rows(result) -> list:
 async def get_user_info(db: AsyncSurreal, user_id: str) -> dict:
     try:
         rows = _extract_rows(await db.query(
-            f"SELECT id, name, current_role, current_tenant FROM {user_id}"
+            f"SELECT id, name, display_name, role FROM {user_id}"
         ))
         return rows[0] if rows else {}
     except Exception as e:
@@ -143,15 +143,8 @@ async def get_user_info(db: AsyncSurreal, user_id: str) -> dict:
 
 
 async def get_user_store(db: AsyncSurreal, user_id: str) -> str | None:
-    """获取门店店长/店员绑定的 store ID"""
-    try:
-        rows = _extract_rows(await db.query(
-            f"SELECT VALUE ->membership.store[0] FROM {user_id} WHERE ->membership.status = 'active'"
-        ))
-        val = rows[0] if rows else None
-        return str(val) if val else None
-    except Exception:
-        return None
+    """流通处无多租户/多门店，直接返回 None"""
+    return None
 
 
 # ── 消息处理 ──
@@ -187,7 +180,7 @@ async def process_message(db: AsyncSurreal, msg: dict, sem: asyncio.Semaphore):
 
                 # ── 用户上下文 ──
                 user = await get_user_info(db, created_by) if created_by else {}
-                role = user.get("current_role")
+                role = user.get("role")
                 store_id = await get_user_store(db, created_by) if created_by else None
 
                 # ── Step 1: LLM 生成 SQL ──
@@ -348,7 +341,7 @@ async def run_agent(db: AsyncSurreal, sem: asyncio.Semaphore):
 async def main():
     log.info(f"如意 Agent v2 启动 | 模型: {LLM['model']} | 并发: {RT['max_concurrent']}")
 
-    for role in [None, "平台管理员", "经理", "门店店长", "店员", "业务员"]:
+    for role in [None, "管理员", "店员"]:
         get_cached_prompt(role)
     log.info(f"提示词缓存就绪 ({len(_prompt_cache)} 个角色)")
 

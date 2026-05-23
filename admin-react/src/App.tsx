@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
 import { HashRouter, Routes, Route, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/stores/auth'
-import { loadMenuConfig, getMenuGroups, loadSchema, getSchemaSnapshot, getTableMeta } from '@/lib/schema'
-import SchemaTable, { type TableController as SchemaTableHandle } from '@/components/SchemaTable'
+import { loadMenuConfig, getMenuGroups, loadSchema, getTableMeta } from '@/lib/schema'
+import SchemaTable from '@/components/SchemaTable'
 import DetailPanel from '@/components/DetailPanel'
 import ChatPanel from '@/components/ChatPanel'
-import type { DetailController } from '@/agent/dispatcher'
+import type { DetailController, TableController } from '@/agent/dispatcher'
 
 // ── 首页 ──
 function HomePage() {
@@ -22,7 +22,7 @@ function HomePage() {
 // ── 表页面 ──
 function TablePage({ tableName, tableRefs, detailCtrl }: {
   tableName: string
-  tableRefs: React.MutableRefObject<Map<string, SchemaTableHandle>>
+  tableRefs: React.MutableRefObject<Map<string, TableController>>
   detailCtrl: DetailController
 }) {
   const meta = getTableMeta(tableName)
@@ -37,7 +37,7 @@ function TablePage({ tableName, tableRefs, detailCtrl }: {
       </div>
       <div style={{ flex: 1, overflow: 'auto', padding: 20 }}>
         <SchemaTable
-          ref={(el) => { if (el) tableRefs.current.set(tableName, el) }}
+          ref={(el) => { if (el) tableRefs.current.set(tableName, el as TableController) }}
           tableName={tableName}
           meta={meta || null}
           onRowClick={(id) => { setDetailMode('view'); setDetailRecordId(id) }}
@@ -70,10 +70,9 @@ function Sidebar({ currentTable, onSelectTable, onLogout }: {
 
   useEffect(() => { setMenuGroups(getMenuGroups()) }, [])
 
-  // Auto-expand group containing current table
   useEffect(() => {
     for (const g of menuGroups) {
-      if (g.tables.some(t => t.key === currentTable)) {
+      if (g.tables.some((t: any) => t.key === currentTable)) {
         setExpandedGroups(prev => new Set([...prev, g.key]))
         break
       }
@@ -90,58 +89,28 @@ function Sidebar({ currentTable, onSelectTable, onLogout }: {
 
   return (
     <div style={{ width: 220, minWidth: 220, background: '#001529', color: '#fff', display: 'flex', flexDirection: 'column', height: '100vh' }}>
-      {/* Logo */}
       <div style={{ padding: '16px 20px', fontSize: 18, fontWeight: 700, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
         RFZv5 <span style={{ fontSize: 12, fontWeight: 400, color: '#ffffff88' }}>流通处</span>
       </div>
-
-      {/* Menu */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
-        {menuGroups.map(group => (
+        {menuGroups.map((group: any) => (
           <div key={group.key}>
-            <div
-              onClick={() => toggleGroup(group.key)}
-              style={{
-                padding: '10px 20px', cursor: 'pointer', fontSize: 13,
-                color: '#ffffff99', display: 'flex', alignItems: 'center',
-                justifyContent: 'space-between', userSelect: 'none',
-                transition: 'background 0.2s',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
-              onMouseLeave={e => (e.currentTarget.style.background = '')}
-            >
+            <div onClick={() => toggleGroup(group.key)}
+              style={{ padding: '10px 20px', cursor: 'pointer', fontSize: 13, color: '#ffffff99', display: 'flex', alignItems: 'center', justifyContent: 'space-between', userSelect: 'none' }}>
               {group.label}
               <span style={{ fontSize: 10, transition: 'transform 0.2s', transform: expandedGroups.has(group.key) ? 'rotate(90deg)' : '' }}>▶</span>
             </div>
-            {expandedGroups.has(group.key) && group.tables.map(table => (
-              <div
-                key={table.key}
-                onClick={() => onSelectTable(table.key)}
-                style={{
-                  padding: '8px 20px 8px 36px', cursor: 'pointer', fontSize: 13,
-                  color: currentTable === table.key ? '#fff' : '#ffffff88',
-                  background: currentTable === table.key ? '#1677ff' : '',
-                  transition: 'background 0.2s',
-                }}
-                onMouseEnter={e => { if (currentTable !== table.key) e.currentTarget.style.background = 'rgba(255,255,255,0.08)' }}
-                onMouseLeave={e => { if (currentTable !== table.key) e.currentTarget.style.background = '' }}
-              >
+            {expandedGroups.has(group.key) && group.tables.map((table: any) => (
+              <div key={table.key} onClick={() => onSelectTable(table.key)}
+                style={{ padding: '8px 20px 8px 36px', cursor: 'pointer', fontSize: 13, color: currentTable === table.key ? '#fff' : '#ffffff88', background: currentTable === table.key ? '#1677ff' : '' }}>
                 {table.label}
               </div>
             ))}
           </div>
         ))}
       </div>
-
-      {/* User */}
       <div style={{ position: 'relative', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-        <div
-          onClick={() => setUserMenuOpen(!userMenuOpen)}
-          style={{
-            padding: '12px 20px', cursor: 'pointer', display: 'flex',
-            alignItems: 'center', gap: 10, fontSize: 13,
-          }}
-        >
+        <div onClick={() => setUserMenuOpen(!userMenuOpen)} style={{ padding: '12px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, fontSize: 13 }}>
           <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#1677ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 14 }}>
             {auth.user?.display_name?.[0] || 'U'}
           </div>
@@ -151,23 +120,13 @@ function Sidebar({ currentTable, onSelectTable, onLogout }: {
           </div>
         </div>
         {userMenuOpen && (
-          <div style={{
-            position: 'absolute', bottom: '100%', left: 12, right: 12,
-            background: '#fff', borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            padding: 4, zIndex: 100,
-          }}>
-            <div onClick={() => { onLogout(); setUserMenuOpen(false) }} style={{
-              padding: '8px 12px', cursor: 'pointer', fontSize: 13, color: '#333',
-              borderRadius: 6,
-            }} onMouseEnter={e => (e.currentTarget.style.background = '#f5f5f5')}
-              onMouseLeave={e => (e.currentTarget.style.background = '')}>
+          <div style={{ position: 'absolute', bottom: '100%', left: 12, right: 12, background: '#fff', borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', padding: 4, zIndex: 100 }}>
+            <div onClick={() => { onLogout(); setUserMenuOpen(false) }} style={{ padding: '8px 12px', cursor: 'pointer', fontSize: 13, color: '#333', borderRadius: 6 }}>
               退出登录
             </div>
           </div>
         )}
       </div>
-
-      {/* Version */}
       <div style={{ padding: '8px 20px', fontSize: 10, color: '#ffffff33' }}>
         v.{(window as any).__COMMIT_HASH__ || 'dev'}
       </div>
@@ -175,12 +134,12 @@ function Sidebar({ currentTable, onSelectTable, onLogout }: {
   )
 }
 
-// ── App ──
+// ── AppInner ──
 function AppInner() {
   const auth = useAuth()
   const nav = useNavigate()
   const [currentTable, setCurrentTable] = useState('')
-  const tableRefs = useRef<Map<string, SchemaTableHandle>>(new Map())
+  const tableRefs = useRef<Map<string, TableController>>(new Map())
   const [detailMode, setDetailMode] = useState<'view' | 'create' | null>(null)
   const [detailRecordId, setDetailRecordId] = useState<string | null>(null)
   const [detailPrefill, setDetailPrefill] = useState<Record<string, any>>({})
@@ -204,58 +163,53 @@ function AppInner() {
     auth.logout()
     nav('/login')
   }
+  const [schemaReady, setSchemaReady] = useState(false)
 
   // Load data on mount
   useEffect(() => {
     if (auth.token) {
       loadMenuConfig()
-      loadSchema(auth.token)
+      loadSchema(auth.token).then(() => setSchemaReady(true))
     }
   }, [auth.token])
-
-  // Parse route
+  // Parse route on mount and on hash change
   useEffect(() => {
-    const hash = window.location.hash
-    const match = hash.match(/#\/tables\/(\w+)/)
-    if (match) setCurrentTable(match[1])
+    function parseHash() {
+      const hash = window.location.hash
+      const match = hash.match(/#\/tables\/(\w+)/)
+      if (match) setCurrentTable(match[1])
+    }
+    parseHash()
+    window.addEventListener('hashchange', parseHash)
+    return () => window.removeEventListener('hashchange', parseHash)
   }, [])
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       <Sidebar currentTable={currentTable} onSelectTable={handleSelectTable} onLogout={handleLogout} />
-
-      {/* Main content */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/tables/:tableName" element={
-            <TablePage
-              tableName={currentTable}
-              tableRefs={tableRefs}
-              detailCtrl={detailCtrl}
-            />
-          } />
+          <Route path="/tables/:tableName" element={<TablePage key={`${currentTable}-${schemaReady}`} tableName={currentTable} tableRefs={tableRefs} detailCtrl={detailCtrl} />} />
         </Routes>
       </div>
-
-      {/* Chat Panel */}
-      <ChatPanel
-        tableRefs={tableRefs}
-        currentTable={currentTable}
-        detailCtrl={detailCtrl}
-      />
+      <ChatPanel tableRefs={tableRefs} currentTable={currentTable} detailCtrl={detailCtrl} />
     </div>
   )
 }
 
 // ── 登录页 ──
 function LoginPage() {
-  const { login } = useAuth()
+  const { login, token } = useAuth()
   const nav = useNavigate()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (token) nav('/', { replace: true })
+  }, [token, nav])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -281,17 +235,13 @@ function LoginPage() {
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: 16 }}>
             <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#666' }}>用户名</label>
-            <input type="text" value={username} onChange={e => setUsername(e.target.value)}
-              placeholder="输入用户名"
-              style={{ width: '100%', padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: 6, fontSize: 14, boxSizing: 'border-box' }}
-            />
+            <input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="输入用户名"
+              style={{ width: '100%', padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: 6, fontSize: 14, boxSizing: 'border-box' }} />
           </div>
           <div style={{ marginBottom: 20 }}>
             <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#666' }}>密码</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-              placeholder="输入密码"
-              style={{ width: '100%', padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: 6, fontSize: 14, boxSizing: 'border-box' }}
-            />
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="输入密码"
+              style={{ width: '100%', padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: 6, fontSize: 14, boxSizing: 'border-box' }} />
           </div>
           {error && <div style={{ color: '#d93025', fontSize: 13, marginBottom: 12 }}>{error}</div>}
           <button type="submit" disabled={loading || !username || !password}
@@ -306,21 +256,10 @@ function LoginPage() {
 
 // ── Root ──
 export default function App() {
+  const auth = useAuth()
   return (
     <HashRouter>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/*" element={<AuthGuard><AppInner /></AuthGuard>} />
-      </Routes>
+      {auth.token ? <AppInner /> : <LoginPage />}
     </HashRouter>
   )
-}
-
-function AuthGuard({ children }: { children: React.ReactNode }) {
-  const auth = useAuth()
-  if (!auth.token) {
-    window.location.hash = '#/login'
-    return null
-  }
-  return <>{children}</>
 }
