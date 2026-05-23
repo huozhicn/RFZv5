@@ -1,0 +1,197 @@
+import { useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react'
+import { useAuth } from '@/stores/auth'
+import { sdbQuery } from '@/lib/sdb'
+import type { TableMeta, FieldMeta } from '@/lib/schema'
+import { extractEnumOptions, fieldLabel, de } from '@/lib/schema'
+
+interface Props {
+  tableName: string
+  meta: TableMeta | null
+  onRowClick: (recordId: string) => void
+  onCreate?: () => void
+}
+
+export interface TableController {
+  setFilter: (field: string, value: string) => void
+  highlightRows: (rowIds: string[]) => void
+  refresh: () => void
+}
+
+const LABEL_MAP: Record<string, string> = {
+  'active': '激活', 'inactive': '禁用',
+  '上架': '上架', '下架': '下架',
+  'pending': '待处理', 'done': '已完成',
+  '已发货': '已发货', '待付款': '待付款', '已完成': '已完成', '已取消': '已取消',
+}
+
+function renderCell(row: any, field: FieldMeta): string {
+  const val = row[field.name]
+  if (val === null || val === undefined) return '-'
+  if (field.isRecord && typeof val === 'object' && val !== null) {
+    if (Array.isArray(val)) {
+      return val.map((v: any) => v.name || v.sku || v.title || v.display_name || v.id || '-').join(', ') || '-'
+    }
+    return val.name || val.sku || val.title || val.display_name || val.id || '-'
+  }
+  if (field.kind === 'datetime') return fmtDatetime(val)
+  if (field.assert) {
+    const enums = extractEnumOptions(field.assert)
+    if (enums.length > 0 && enums.length <= 8) {
+      return LABEL_MAP[val] || String(val)
+    }
+  }
+  if (typeof val === 'boolean') return val ? '是' : '否'
+  return String(val)
+}
+
+function fmtDatetime(val: any): string {
+  const s = String(val)
+  // Truncate ISO 8601 to seconds: "2026-05-23T02:03:20.181667652Z" → "2026-05-23 02:03:20"
+  const m = s.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})/)
+  return m ? `${m[1]} ${m[2]}` : s
+}
+
+const SchemaTable = forwardRef<TableController, Props>(({ tableName, meta, onRowClick, onCreate }, ref) => {
+  const { token, tablePerms } = useAuth()
+  const [rows, setRows] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+  const [searchText, setSearchText] = useState('')
+  const [page, setPage] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+  const [highlighted, setHighlighted] = useState<string[]>([])
+  const PAGE_SIZE = 20
+
+  const fetchData = useCallback(async () => {
+    if (!tableName) return
+    setLoading(true)
+    try {
+      const text = searchText.trim()
+      let where = ''
+      let vars: Record<string, unknown> | undefined
+      const { fetchClause } = meta ? de(meta) : { fetchClause: '' }
+      const orderField = meta?.fields.some(f => f.name === 'created_at') ? 'created_at' : 'id'
+      const orderDir = orderField === 'id' ? 'ASC' : 'DESC'
+      if (text && meta) {
+        const stringFields = meta.fields.filter(f => f.kind.includes('string') || f.kind.includes('text'))
+        if (stringFields.length > 0) {
+          where = `WHERE (${stringFields.map(f => `${f.name} CONTAINS $search`).join(' OR ')})`
+          vars = { search: text }
+        }
+      }
+
+      const countSql = where
+        ? `SELECT count() FROM ${tableName} ${where} GROUP ALL`
+        : `SELECT count() FROM ${tableName} GROUP ALL`
+      const countResult = await sdbQuery(countSql, vars, token)
+      setTotalCount(countResult?.[0]?.count ?? 0)
+
+      const dataSql = `SELECT * FROM ${tableName} ${where} ORDER BY ${orderField} ${orderDir} LIMIT ${PAGE_SIZE} START ${(page - 1) * PAGE_SIZE} ${fetchClause}`
+      const data = await sdbQuery(dataSql, vars, token) || []
+      setRows(data)
+    } catch (err: any) {
+      console.error(`[SchemaTable] ${tableName}:`, err.message)
+      setRows([])
+      setTotalCount(0)
+    } finally {
+      setLoading(false)
+    }
+  }, [tableName, searchText, page, token, meta])
+
+  useEffect(() => { fetchData() }, [fetchData])
+
+  // Debounce search
+  useEffect(() => {
+    const t = setTimeout(() => { setPage(1); fetchData() }, 300)
+    return () => clearTimeout(t)
+  }, [searchText])
+
+  useImperativeHandle(ref, () => ({
+    setFilter(_field: string, value: string) { setSearchText(value) },
+    highlightRows(ids: string[]) { setHighlighted(ids) },
+    refresh() { fetchData() },
+  }), [fetchData])
+
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE)
+
+  if (!meta) return <div style={{ padding: 40, textAlign: 'center', color: '#999' }}>加载中...</div>
+
+  const visibleCols = meta ? de(meta).fields : []
+  const colSpan = visibleCols.length || 1
+
+  return (
+    <div>
+      {/* Toolbar */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input
+            type="text"
+            value={searchText}
+            onChange={e => setSearchText(e.target.value)}
+            placeholder="搜索..."
+            style={{ width: 240, padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: 6, fontSize: 14 }}
+          />
+          {onCreate && tablePerms[tableName]?.canCreate !== false && (
+            <button onClick={onCreate}
+              style={{ padding: '8px 16px', background: '#1677ff', color: '#fff', border: 'none', borderRadius: 6, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}
+            >+ 新建</button>
+          )}
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, color: '#666' }}>
+          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)}
+            style={{ width: 36, height: 36, border: '1px solid #d9d9d9', background: '#fff', borderRadius: 6, fontSize: 18, cursor: page <= 1 ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >‹</button>
+          <span style={{ minWidth: 60, textAlign: 'center' }}>{page} / {totalPages || 1}</span>
+          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}
+            style={{ width: 36, height: 36, border: '1px solid #d9d9d9', background: '#fff', borderRadius: 6, fontSize: 18, cursor: page >= totalPages ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >›</button>
+          <span style={{ marginLeft: 8 }}>共 {totalCount} 条</span>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead>
+            <tr style={{ background: '#fafafa', borderBottom: '2px solid #e8e8e8' }}>
+              {visibleCols.map(f => (
+                <th key={f.name} style={{
+                  padding: '8px 12px', textAlign: 'left', fontWeight: 600,
+                  color: '#555', whiteSpace: 'nowrap',
+                }}>
+                  {fieldLabel(f)}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={colSpan} style={{ padding: 40, textAlign: 'center', color: '#999' }}>加载中...</td></tr>
+            ) : rows.length === 0 ? (
+              <tr><td colSpan={colSpan} style={{ padding: 40, textAlign: 'center', color: '#bbb' }}>暂无数据</td></tr>
+            ) : rows.map(row => (
+              <tr
+                key={row.id}
+                onClick={() => onRowClick(row.id)}
+                style={{
+                  cursor: 'pointer',
+                  background: highlighted.includes(row.id) ? '#fff3cd' : undefined,
+                  borderBottom: '1px solid #f0f0f0',
+                }}
+                onMouseEnter={e => { if (!highlighted.includes(row.id)) (e.currentTarget as HTMLElement).style.background = '#f5f5f5' }}
+                onMouseLeave={e => { if (!highlighted.includes(row.id)) (e.currentTarget as HTMLElement).style.background = '' }}
+              >
+                {visibleCols.map(f => (
+                  <td key={f.name} style={{ padding: '6px 12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 200 }}>
+                    {renderCell(row, f)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+})
+
+export default SchemaTable

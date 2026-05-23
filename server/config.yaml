@@ -1,0 +1,24 @@
+# 流通处 Agent Server 配置
+llm:
+  provider: deepseek
+  model: deepseek-chat
+  api_key: ""
+  base_url: https://api.deepseek.com/v1
+  max_tokens: 2000
+
+sdb:
+  url: ws://127.0.0.1:8000
+  namespace: huozhi
+  database: rfv5_dist
+  username: root
+  password: root
+
+prompts:
+  dir: prompts
+  system: system.md
+  actions: actions.md
+
+runtime:
+  max_concurrent: 10
+  backlog_limit: 20
+  poll_fallback_seconds: 2
