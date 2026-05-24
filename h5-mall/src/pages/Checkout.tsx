@@ -105,6 +105,7 @@ export default function Checkout() {
       }
 
       cartStore.clear()
+      sessionStorage.setItem('just_placed_order', orderId)
       nav(`/order/${orderId}`, { replace: true })
     } catch (err: any) {
       setError(err.message || '下单失败，请重试')

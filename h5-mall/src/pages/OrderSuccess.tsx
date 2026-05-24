@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { sdbQuery } from '@/lib/sdb'
+import { useCustomerAuth } from '@/stores/auth'
 
 interface OrderInfo {
   id: string
@@ -33,19 +34,27 @@ const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
 export default function OrderSuccess() {
   const { id } = useParams<{ id: string }>()
   const nav = useNavigate()
+  const auth = useCustomerAuth()
+  const customer = auth.customer
   const [order, setOrder] = useState<OrderInfo | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (id) loadOrder(id)
-  }, [id])
+    // Authenticated users can see their own orders
+    if (customer) { if (id) loadOrder(id, customer.id); return }
+    // Non-logged-in users can only see the order they just placed (sessionStorage token)
+    const justPlaced = sessionStorage.getItem('just_placed_order')
+    if (justPlaced === id) { if (id) loadOrder(id); return }
+    nav('/login')
+  }, [id, customer])
 
-  async function loadOrder(oid: string) {
+  async function loadOrder(oid: string, cid?: string) {
     try {
+      const cidFilter = cid ? ` AND customer=${cid}` : ''
       const rows = await sdbQuery<any[]>(
         `SELECT *, 
           (SELECT quantity, unit_price, amount, variant.sku AS variant_sku, variant.name AS variant_name, variant.spu.name AS product_name, variant.spu.main_image_url AS product_image FROM order_item WHERE order=$parent.id) AS items
-         FROM sales_order WHERE id=${oid} LIMIT 1`
+         FROM sales_order WHERE id=${oid}${cidFilter} LIMIT 1`
       )
       if (rows?.[0]) {
         const o = rows[0]
