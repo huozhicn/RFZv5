@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { sdbQuery } from '@/lib/sdb'
+import { sdbQuery, embed } from '@/lib/sdb'
 
 interface ProductResult {
   id: string; name: string; main_image_url: string
@@ -43,8 +43,11 @@ export default function Search() {
     saveHistory(updated)
 
     try {
+      // 语义搜索：bge-m3 向量 → SDB cosine 相似度
+      const vector = await embed(term)
+      const vectorStr = '[' + vector.join(',') + ']'
       const rows = await sdbQuery<any[]>(
-        `SELECT id, name, main_image_url, product_type, created_at FROM product WHERE is_listed=true AND name CONTAINS '${term.replace(/'/g, "\\'")}' ORDER BY created_at DESC LIMIT 20`
+        `SELECT id, name, main_image_url, product_type, created_at, vector::similarity::cosine(content_embedding, ${vectorStr}) AS _score FROM product WHERE is_listed=true AND content_embedding IS NOT NONE ORDER BY _score DESC LIMIT 20`
       )
       if (!rows) { setResults([]); return }
       const list: ProductResult[] = []

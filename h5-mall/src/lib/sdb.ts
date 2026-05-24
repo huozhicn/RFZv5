@@ -81,3 +81,26 @@ export async function sdbGet<T = any>(sql: string, vars?: Record<string, unknown
   const rows = await sdbQuery<T[]>(sql, vars)
   return rows?.[0] ?? null
 }
+
+// 语义搜索：调用 /api/embed 获取 1024 维 bge-m3 向量
+let _embedCache = new Map<string, number[]>()
+export async function embed(text: string): Promise<number[]> {
+  const key = text.trim()
+  if (_embedCache.has(key)) return _embedCache.get(key)!
+
+  const resp = await fetch(`${window.location.origin}/api/embed`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: key }),
+  })
+  if (!resp.ok) throw new Error(`Embed API ${resp.status}`)
+  const data = await resp.json()
+  const vec: number[] = data.vector
+  _embedCache.set(key, vec)
+  // Limit cache size
+  if (_embedCache.size > 100) {
+    const first = _embedCache.keys().next().value
+    if (first) _embedCache.delete(first)
+  }
+  return vec
+}

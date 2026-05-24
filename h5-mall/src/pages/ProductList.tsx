@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { sdbQuery } from '@/lib/sdb'
+import { sdbQuery, embed } from '@/lib/sdb'
 
 interface Product {
   id: string
@@ -53,7 +53,9 @@ export default function ProductList() {
     let sql: string
     const baseFields = 'id, name, main_image_url, product_type, category.name AS category_name, created_at'
     if (q) {
-      sql = `SELECT ${baseFields} FROM product WHERE is_listed=true AND name CONTAINS '${q.replace(/'/g, "\\'")}' ORDER BY created_at DESC LIMIT 30`
+      const vector = await embed(q)
+      const vectorStr = '[' + vector.join(',') + ']'
+      sql = `SELECT ${baseFields}, vector::similarity::cosine(content_embedding, ${vectorStr}) AS _score FROM product WHERE is_listed=true AND content_embedding IS NOT NONE ORDER BY _score DESC LIMIT 30`
     } else if (catId === ACTIVITY_CAT) {
       sql = `SELECT ${baseFields} FROM product WHERE is_listed=true AND product_type='活动' ORDER BY created_at DESC LIMIT 30`
     } else if (catId) {
