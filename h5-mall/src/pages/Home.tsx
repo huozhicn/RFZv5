@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { sdbQuery } from '@/lib/sdb'
 
-// 分类 emoji 映射
 const CAT_ICONS: Record<string, string> = {
   '经书': '📖', '法器': '🔔', '念珠': '📿', '香品': '🕯️', '佛像': '🧘', '文创': '🎨',
 }
@@ -10,12 +9,14 @@ const CAT_ICONS: Record<string, string> = {
 interface CarouselItem { id: string; image_url: string; link_url?: string }
 interface CategoryItem { id: string; name: string }
 interface ProductItem { id: string; name: string; main_image_url: string }
-interface ProductWithPrice extends ProductItem {
-  price: number
-  variantId: string
-}
+interface ProductWithPrice extends ProductItem { price: number; variantId: string }
 interface StoreInfo { name: string; address: string; phone: string; business_hours: string; description: string; logo_url?: string }
 interface AnnounceItem { id: string; title: string; content: string }
+interface ActivityItem {
+  id: string; name: string; main_image_url: string; base_price: number
+  start_date?: string; end_date?: string; cycle_description?: string
+  capacity: number; signup_count: number
+}
 
 export default function Home() {
   const nav = useNavigate()
@@ -24,64 +25,57 @@ export default function Home() {
   const [featured, setFeatured] = useState<ProductWithPrice[]>([])
   const [storeInfo, setStoreInfo] = useState<StoreInfo | null>(null)
   const [announcements, setAnnouncements] = useState<AnnounceItem[]>([])
+  const [activities, setActivities] = useState<ActivityItem[]>([])
   const [carouselIdx, setCarouselIdx] = useState(0)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    loadAll()
-  }, [])
+  useEffect(() => { loadAll() }, [])
 
   async function loadAll() {
     try {
-      const [carouselRes, catRes, featRes, storeRes, annRes] = await Promise.all([
+      const [carouselRes, catRes, featRes, storeRes, annRes, actRes] = await Promise.all([
         sdbQuery<any[]>('SELECT id, image_url, link_url FROM carousel WHERE is_active=true ORDER BY sort_order LIMIT 5'),
         sdbQuery<any[]>('SELECT id, name FROM product_category ORDER BY sort_order'),
         sdbQuery<any[]>('SELECT id, product.name, product.main_image_url, product.id AS productId, variant.id AS variantId, (SELECT price FROM pricing WHERE variant=variant.id AND is_active=true LIMIT 1)[0].price AS price FROM featured_product FETCH product FETCH variant ORDER BY sort_order LIMIT 6'),
         sdbQuery<any[]>('SELECT * FROM store_info LIMIT 1'),
         sdbQuery<any[]>('SELECT id, title, content FROM announcement WHERE is_active=true ORDER BY created_at DESC LIMIT 3'),
+        sdbQuery<any[]>(`SELECT id, name, main_image_url, base_price, start_date, end_date, cycle_description, capacity FROM product WHERE product_type='活动' AND is_listed=true ORDER BY created_at DESC LIMIT 10`),
       ])
       setCarousels(carouselRes || [])
       setCategories(catRes || [])
       setFeatured((featRes || []).map((f: any) => ({
-        id: f.productId || f.id,
-        name: f.product?.name || f.name || '',
-        main_image_url: f.product?.main_image_url || '',
-        price: f.price || 0,
+        id: f.productId || f.id, name: f.product?.name || f.name || '',
+        main_image_url: f.product?.main_image_url || '', price: f.price || 0,
         variantId: f.variantId || f.variant?.id || '',
       })).filter((f: any) => f.name))
       setStoreInfo((storeRes || [])[0] || null)
       setAnnouncements(annRes || [])
-    } catch (err) {
-      console.error('Home load error:', err)
-    } finally {
-      setLoading(false)
-    }
+
+      // Load signup counts for each activity
+      const actList: ActivityItem[] = []
+      for (const a of (actRes || [])) {
+        let signupCount = 0
+        try {
+          const vr = await sdbQuery<any[]>(`SELECT id FROM product_variant WHERE spu=${a.id} LIMIT 1`)
+          if (vr?.[0]) {
+            const cr = await sdbQuery<any[]>(
+              `SELECT math::sum(order_item.quantity) AS total FROM order_item WHERE variant=${vr[0].id} AND order.status NOT IN ['已取消'] GROUP ALL`
+            )
+            signupCount = cr?.[0]?.total || 0
+          }
+        } catch {}
+        actList.push({ ...a, signup_count: signupCount })
+      }
+      setActivities(actList)
+    } catch (err) { console.error('Home load error:', err) }
+    finally { setLoading(false) }
   }
 
-  // 轮播自动播放
   useEffect(() => {
     if (carousels.length <= 1) return
-    const timer = setInterval(() => {
-      setCarouselIdx(i => (i + 1) % carousels.length)
-    }, 3000)
+    const timer = setInterval(() => setCarouselIdx(i => (i + 1) % carousels.length), 3000)
     return () => clearInterval(timer)
   }, [carousels.length])
-
-  if (loading) {
-    return (
-      <div>
-        <div className="skeleton" style={{ width: '100%', aspectRatio: '16/9', marginBottom: 20, borderRadius: 12 }} />
-        <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
-          {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ width: 72, height: 72, borderRadius: 12, flexShrink: 0 }} />)}
-        </div>
-        <div className="product-grid">
-          {[1,2,3,4].map(i => (
-            <div key={i} className="skeleton" style={{ aspectRatio: '3/4', borderRadius: 12 }} />
-          ))}
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div>
@@ -125,21 +119,62 @@ export default function Home() {
         </>
       )}
 
+      {/* 近期活动 — 横滑卡片 */}
+      {activities.length > 0 && (
+        <div style={{ marginTop: 4, marginBottom: 20 }}>
+          <div className="section-header">
+            <h2>近期活动</h2>
+            <span className="more" onClick={() => nav('/products?activity=1')}>全部 ›</span>
+          </div>
+          <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 4, WebkitOverflowScrolling: 'touch' }}>
+            {activities.map(a => {
+              const isFull = a.capacity > 0 && a.signup_count >= a.capacity
+              const dateStr = a.start_date
+                ? a.start_date.slice(0, 16).replace('T', ' ')
+                : a.cycle_description || '长期活动'
+              return (
+                <div key={a.id} onClick={() => nav(`/activity/${a.id}`)}
+                  style={{
+                    flexShrink: 0, width: 220, background: '#fff', borderRadius: 12,
+                    overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+                  }}>
+                  {a.main_image_url ? (
+                    <img src={a.main_image_url} alt={a.name} style={{ width: '100%', height: 110, objectFit: 'cover' }} loading="lazy" />
+                  ) : (
+                    <div style={{ width: '100%', height: 110, background: '#f0ebe3', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>🎋</div>
+                  )}
+                  <div style={{ padding: 10 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.name}</div>
+                    <div style={{ fontSize: 12, color: '#999', marginBottom: 6 }}>📅 {dateStr}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 15, fontWeight: 700, color: a.base_price > 0 ? '#c41e3a' : '#389e0d' }}>
+                        {a.base_price > 0 ? `¥${a.base_price}` : '免费'}
+                      </span>
+                      {a.capacity > 0 && (
+                        <span style={{ fontSize: 11, color: isFull ? '#d93025' : '#999' }}>
+                          {isFull ? '已满' : `${a.signup_count}/${a.capacity}`}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* 推荐商品 */}
       {featured.length > 0 && (
         <>
-          <div className="section-header">
-            <h2>推荐法宝</h2>
-          </div>
+          <div className="section-header"><h2>推荐法宝</h2></div>
           <div className="product-grid">
             {featured.map(p => (
               <div key={p.id} className="product-card" onClick={() => nav(`/product/${p.id}`)}>
                 {p.main_image_url ? (
                   <img className="card-img" src={p.main_image_url} alt={p.name} loading="lazy" />
                 ) : (
-                  <div className="card-img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>
-                    📦
-                  </div>
+                  <div className="card-img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>📦</div>
                 )}
                 <div className="card-body">
                   <div className="card-name">{p.name}</div>

@@ -15,14 +15,18 @@ const CAT_LABELS: Record<string, string> = {
   '经书': '📖', '法器': '🔔', '念珠': '📿', '香品': '🕯️', '佛像': '🧘', '文创': '🎨',
 }
 
+// Special category value for activity filter
+const ACTIVITY_CAT = '_activity_'
+
 export default function ProductList() {
   const nav = useNavigate()
   const [params] = useSearchParams()
   const catFilter = params.get('cat') || ''
+  const isActivity = params.get('activity') === '1'
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([])
   const [search, setSearch] = useState('')
-  const [activeCat, setActiveCat] = useState(catFilter)
+  const [activeCat, setActiveCat] = useState(isActivity ? ACTIVITY_CAT : catFilter)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -49,17 +53,17 @@ export default function ProductList() {
     let sql: string
     if (q) {
       sql = `SELECT id, name, main_image_url, product_type, category.name AS category_name FROM product WHERE is_listed=true AND name CONTAINS '${q.replace(/'/g, "\\'")}' ORDER BY created_at DESC LIMIT 30`
+    } else if (catId === ACTIVITY_CAT) {
+      sql = `SELECT id, name, main_image_url, product_type, category.name AS category_name FROM product WHERE is_listed=true AND product_type='活动' ORDER BY created_at DESC LIMIT 30`
     } else if (catId) {
       sql = `SELECT id, name, main_image_url, product_type, category.name AS category_name FROM product WHERE is_listed=true AND category=${catId} ORDER BY created_at DESC LIMIT 30`
     } else {
       sql = `SELECT id, name, main_image_url, product_type, category.name AS category_name FROM product WHERE is_listed=true ORDER BY created_at DESC LIMIT 30`
     }
     
-    // Get products + their min pricing
     const rows = await sdbQuery<any[]>(sql)
     if (!rows || rows.length === 0) return []
 
-    // For each product, get the minimum active pricing
     const result: Product[] = []
     for (const r of rows) {
       let minPrice = 0
@@ -81,28 +85,23 @@ export default function ProductList() {
     return result
   }
 
-  function handleSearch() {
-    loadData()
+  function handleSearch() { loadData() }
+
+  function selectCat(cat: string) {
+    setActiveCat(activeCat === cat ? '' : cat)
+    setSearch('')
   }
 
   return (
     <div>
       {/* 搜索栏 */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-        <input
-          type="text" placeholder="搜索法宝..."
-          value={search}
+        <input type="text" placeholder="搜索法宝或活动..." value={search}
           onChange={e => setSearch(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleSearch()}
-          style={{
-            flex: 1, padding: '8px 14px', border: '1px solid #e8e8e8',
-            borderRadius: 20, fontSize: 14, background: '#fff',
-          }}
-        />
+          style={{ flex: 1, padding: '8px 14px', border: '1px solid #e8e8e8', borderRadius: 20, fontSize: 14, background: '#fff' }} />
         <button onClick={handleSearch}
-          style={{ padding: '8px 16px', background: '#c41e3a', color: '#fff', borderRadius: 20, fontSize: 13 }}>
-          搜索
-        </button>
+          style={{ padding: '8px 16px', background: '#c41e3a', color: '#fff', borderRadius: 20, fontSize: 13 }}>搜索</button>
       </div>
 
       {/* 分类筛选 */}
@@ -113,9 +112,15 @@ export default function ProductList() {
           <span className="chip-icon">🏠</span>
           <span className="chip-label">全部</span>
         </div>
+        <div className={`category-chip${activeCat === ACTIVITY_CAT ? ' selected' : ''}`}
+          onClick={() => selectCat(ACTIVITY_CAT)}
+          style={activeCat === ACTIVITY_CAT ? { border: '2px solid #c41e3a', background: '#fff5f5' } : {}}>
+          <span className="chip-icon">🎋</span>
+          <span className="chip-label">活动</span>
+        </div>
         {categories.map(cat => (
           <div key={cat.id} className={`category-chip${activeCat === cat.id ? ' selected' : ''}`}
-            onClick={() => { setActiveCat(activeCat === cat.id ? '' : cat.id); setSearch('') }}
+            onClick={() => selectCat(cat.id)}
             style={activeCat === cat.id ? { border: '2px solid #c41e3a', background: '#fff5f5' } : {}}>
             <span className="chip-icon">{CAT_LABELS[cat.name] || '📦'}</span>
             <span className="chip-label">{cat.name}</span>
@@ -123,7 +128,7 @@ export default function ProductList() {
         ))}
       </div>
 
-      {/* 商品列表 */}
+      {/* 商品/活动列表 */}
       {loading ? (
         <div className="product-grid">
           {[1,2,3,4,5,6].map(i => (
@@ -133,23 +138,24 @@ export default function ProductList() {
       ) : products.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon">🔍</div>
-          <div className="empty-text">没有找到相关法宝</div>
+          <div className="empty-text">{activeCat === ACTIVITY_CAT ? '暂无活动' : '没有找到相关法宝'}</div>
         </div>
       ) : (
         <div className="product-grid">
           {products.map(p => (
-            <div key={p.id} className="product-card" onClick={() => nav(`/product/${p.id}`)}>
+            <div key={p.id} className="product-card"
+              onClick={() => nav(p.product_type === '活动' ? `/activity/${p.id}` : `/product/${p.id}`)}>
               {p.main_image_url ? (
                 <img className="card-img" src={p.main_image_url} alt={p.name} loading="lazy" />
               ) : (
                 <div className="card-img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 48, background: '#f0ebe3' }}>
-                  {CAT_LABELS[p.category_name] || '📦'}
+                  {p.product_type === '活动' ? '🎋' : CAT_LABELS[p.category_name] || '📦'}
                 </div>
               )}
               <div className="card-body">
                 <div className="card-name">{p.name}</div>
                 {p.product_type === '活动' ? (
-                  <div className="card-price" style={{ color: '#389e0d', fontSize: 13 }}>查看活动</div>
+                  <div className="card-price" style={{ color: '#389e0d', fontSize: 13 }}>查看活动 ›</div>
                 ) : p.min_price > 0 ? (
                   <div className="card-price">¥{p.min_price}</div>
                 ) : (
