@@ -3,11 +3,12 @@ import { useCart } from '@/stores/cart'
 import Home from '@/pages/Home'
 import ProductList from '@/pages/ProductList'
 import ProductDetail from '@/pages/ProductDetail'
+import Activities from '@/pages/Activities'
+import ActivityDetail from '@/pages/ActivityDetail'
 import Cart from '@/pages/Cart'
 import Checkout from '@/pages/Checkout'
 import OrderSuccess from '@/pages/OrderSuccess'
 import OrderLookup from '@/pages/OrderLookup'
-import ActivityDetail from '@/pages/ActivityDetail'
 
 function TabBar() {
   const nav = useNavigate()
@@ -17,16 +18,18 @@ function TabBar() {
   const tabs = [
     { path: '/', icon: '🏠', label: '首页' },
     { path: '/products', icon: '📂', label: '分类' },
+    { path: '/activities', icon: '🎋', label: '活动' },
     { path: '/cart', icon: '🛒', label: '购物车', badge: cart.count },
-    { path: '/orders', icon: '📋', label: '订单' },
+    { path: '/orders', icon: '👤', label: '我的' },
   ]
 
   return (
-    <nav className="tab-bar">
+    <nav className="tab-bar" style={{ padding: '4px 0' }}>
       {tabs.map(t => (
         <div key={t.path} className={`tab-item${loc.pathname === t.path ? ' active' : ''}`}
-          onClick={() => nav(t.path)}>
-          <span className="tab-icon">{t.icon}</span>
+          onClick={() => nav(t.path)}
+          style={{ fontSize: 10, padding: '2px 8px' }}>
+          <span className="tab-icon" style={{ fontSize: 20 }}>{t.icon}</span>
           <span>{t.label}</span>
           {t.badge ? <span className="badge">{t.badge}</span> : null}
         </div>
@@ -35,8 +38,7 @@ function TabBar() {
   )
 }
 
-// 需要显示顶部导航栏和底部 TabBar 的页面
-const FULL_SHELL = new Set(['/', '/products', '/cart', '/orders'])
+const FULL_SHELL = new Set(['/', '/products', '/activities', '/cart', '/orders'])
 
 export default function App() {
   return (
@@ -58,6 +60,7 @@ function AppShell() {
           <Route path="/" element={<Home />} />
           <Route path="/products" element={<ProductList />} />
           <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/activities" element={<Activities />} />
           <Route path="/activity/:id" element={<ActivityDetail />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
@@ -75,9 +78,10 @@ function TopNav() {
 
   const titles: Record<string, string> = {
     '/': '如法流通处',
-    '/products': '商品分类',
+    '/products': '法宝分类',
+    '/activities': '近期活动',
     '/cart': '购物车',
-    '/orders': '我的订单',
+    '/orders': '我的',
   }
 
   return (

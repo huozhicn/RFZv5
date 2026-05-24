@@ -3,13 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { sdbQuery } from '@/lib/sdb'
 
 interface OrderSummary {
-  id: string
-  order_no: string
-  total_amount: number
-  status: string
-  payment_method: string
-  created_at: string
-  items_preview: string
+  id: string; order_no: string; total_amount: number
+  status: string; payment_method: string
+  created_at: string; items_preview: string
 }
 
 const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
@@ -34,47 +30,49 @@ export default function OrderLookup() {
     setLoading(true)
     setSearched(true)
     try {
-      // Find customer by phone
       const custRows = await sdbQuery<any[]>(
-        `SELECT id FROM customer WHERE phone='${phone.trim()}' LIMIT 1`
+        `SELECT id, name FROM customer WHERE phone='${phone.trim()}' LIMIT 1`
       )
-      if (!custRows?.[0]) {
-        setOrders([])
-        return
-      }
+      if (!custRows?.[0]) { setOrders([]); return }
       const custId = custRows[0].id
 
-      // Get orders
       const rows = await sdbQuery<any[]>(
         `SELECT id, order_no, total_amount, status, payment_method, created_at FROM sales_order WHERE customer=${custId} ORDER BY created_at DESC LIMIT 20`
       )
 
-      // Get items preview for each order
       const summaries: OrderSummary[] = []
       for (const r of (rows || [])) {
         const items = await sdbQuery<any[]>(
           `SELECT variant.sku, variant.spu.name AS product_name FROM order_item WHERE order=${r.id} LIMIT 3`
         )
-        const preview = (items || []).map((i: any) => i.product_name || i.variant?.spu?.name || '').filter(Boolean).join('、')
+        const preview = (items || []).map((i: any) => i.product_name || '').filter(Boolean).join('、')
         summaries.push({
           id: r.id, order_no: r.order_no, total_amount: r.total_amount,
           status: r.status, payment_method: r.payment_method,
-          created_at: r.created_at,
-          items_preview: preview || '',
+          created_at: r.created_at, items_preview: preview || '',
         })
       }
       setOrders(summaries)
     } catch (err) {
       console.error('Order lookup error:', err)
-    } finally {
-      setLoading(false)
-    }
+    } finally { setLoading(false) }
   }
 
   return (
     <div>
+      {/* 我的 — 头部 */}
+      <div style={{ textAlign: 'center', padding: '20px 0 16px' }}>
+        <div style={{
+          width: 64, height: 64, borderRadius: '50%', background: '#f5f0eb',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 32, margin: '0 auto 8px',
+        }}>👤</div>
+        <div style={{ fontSize: 14, color: '#999' }}>查看您的订单和活动报名</div>
+      </div>
+
+      {/* 手机号搜索 */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-        <input type="tel" placeholder="输入手机号查询订单"
+        <input type="tel" placeholder="输入手机号查询"
           value={phone} onChange={e => setPhone(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleSearch()}
           maxLength={11}
@@ -95,13 +93,13 @@ export default function OrderLookup() {
         <div className="empty-state">
           <div className="empty-icon">📋</div>
           <div className="empty-text">未找到订单</div>
+          <div style={{ fontSize: 13, color: '#bbb', marginTop: 4 }}>试试其他手机号？</div>
         </div>
       )}
 
       {!loading && !searched && (
-        <div className="empty-state">
-          <div className="empty-icon">📋</div>
-          <div className="empty-text">输入手机号查询历史订单</div>
+        <div className="empty-state" style={{ padding: '8px 20px' }}>
+          <div style={{ fontSize: 13, color: '#ccc' }}>↑ 输入手机号查看历史记录</div>
         </div>
       )}
 
