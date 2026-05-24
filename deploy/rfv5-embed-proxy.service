@@ -1,0 +1,14 @@
+[Unit]
+Description=RFZv5 Embedding Proxy
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/rufazao-distribution/server
+ExecStart=/usr/bin/python3 /home/ubuntu/rufazao-distribution/server/embed-proxy.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
