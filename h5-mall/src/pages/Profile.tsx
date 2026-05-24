@@ -114,6 +114,7 @@ export default function Profile() {
 
       {/* Menu — 不含订单和活动（已在 Tab 中） */}
       <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
+        <MenuItem icon="📍" label="收货地址" onClick={() => nav('/address')} />
         <MenuItem icon="✏️" label="编辑资料" onClick={() => nav('/profile/edit')} />
         <MenuItem icon="🔒" label="修改密码" onClick={() => nav('/profile/password')} />
       </div>

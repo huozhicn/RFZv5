@@ -233,7 +233,10 @@ export default function Home() {
         <div style={{ marginTop: 24, background: '#fff', borderRadius: 12, padding: 16, fontSize: 13, color: '#666' }}>
           <div style={{ marginBottom: 4 }}>📍 {storeInfo.address}</div>
           <div style={{ marginBottom: 4 }}>📞 {storeInfo.phone}</div>
-          <div>🕐 {storeInfo.business_hours}</div>
+          <div style={{ marginBottom: 8 }}>🕐 {storeInfo.business_hours}</div>
+          <div onClick={() => nav('/store')} style={{ textAlign: 'center', color: '#c41e3a', cursor: 'pointer', paddingTop: 8, borderTop: '1px solid #f0f0f0' }}>
+            查看流通处介绍 ›
+          </div>
         </div>
       )}
 

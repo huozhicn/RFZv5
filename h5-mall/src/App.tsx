@@ -13,6 +13,9 @@ import Profile from '@/pages/Profile'
 import Login from '@/pages/Login'
 import EditProfile from '@/pages/EditProfile'
 import ChangePassword from '@/pages/ChangePassword'
+import Search from '@/pages/Search'
+import StoreInfoPage from '@/pages/StoreInfoPage'
+import AddressBook from '@/pages/AddressBook'
 
 function TabBar() {
   const nav = useNavigate()
@@ -25,7 +28,7 @@ function TabBar() {
     { path: '/products', icon: '📂', label: '分类' },
     { path: '/activities', icon: '🎋', label: '活动' },
     { path: '/cart', icon: '🛒', label: '购物车', badge: cart.count },
-    { path: '/orders', icon: auth.isLoggedIn ? '👤' : '👤', label: '我的' },
+    { path: '/orders', icon: '👤', label: '我的' },
   ]
 
   return (
@@ -74,6 +77,9 @@ function AppShell() {
           <Route path="/login" element={<Login />} />
           <Route path="/profile/edit" element={<EditProfile />} />
           <Route path="/profile/password" element={<ChangePassword />} />
+          <Route path="/search" element={<Search />} />
+          <Route path="/store" element={<StoreInfoPage />} />
+          <Route path="/address" element={<AddressBook />} />
         </Routes>
       </div>
       {showShell && <TabBar />}
@@ -93,12 +99,14 @@ function TopNav() {
     '/orders': '我的',
   }
 
-  // Pages with back button (no tab bar)
   if (!FULL_SHELL.has(loc.pathname) && !loc.pathname.startsWith('/activity/')) {
     const pageTitles: Record<string, string> = {
       '/login': '登录',
       '/profile/edit': '编辑资料',
       '/profile/password': '修改密码',
+      '/search': '搜索',
+      '/store': '流通处介绍',
+      '/address': '收货地址',
     }
     return (
       <div className="top-nav">
@@ -109,10 +117,13 @@ function TopNav() {
     )
   }
 
-  return (
-    <div className="top-nav">
-      <h1>{titles[loc.pathname] || '如法流通处'}</h1>
-      <div style={{ width: 32 }} />
-    </div>
-  )
+    return (
+      <div className="top-nav">
+        <h1>{titles[loc.pathname] || '如法流通处'}</h1>
+        {loc.pathname === '/' && (
+          <button onClick={() => nav('/search')} style={{ background: 'none', color: '#fff', fontSize: 20, padding: '4px 8px' }}>🔍</button>
+        )}
+        {loc.pathname !== '/' && <div style={{ width: 32 }} />}
+      </div>
+    )
 }
