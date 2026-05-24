@@ -68,11 +68,10 @@ function Sidebar({ currentTable, onSelectTable, onLogout }: {
   onLogout: () => void
 }) {
   const auth = useAuth()
-  const [menuGroups, setMenuGroups] = useState(getMenuGroups())
+  // 直接从模块变量读取（loadMenuConfig 完成后会被填充）
+  const menuGroups = getMenuGroups()
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-
-  useEffect(() => { setMenuGroups(getMenuGroups()) }, [])
 
   useEffect(() => {
     for (const g of menuGroups) {
@@ -171,11 +170,12 @@ function AppInner() {
   }
   const [schemaReady, setSchemaReady] = useState(false)
   const [tableFilter, setTableFilter] = useState('')
+  const [menuReady, setMenuReady] = useState(false)
 
   // Load data on mount
   useEffect(() => {
     if (auth.token) {
-      loadMenuConfig()
+      loadMenuConfig().then(() => setMenuReady(true))
       loadSchema(auth.token).then(() => setSchemaReady(true))
     }
   }, [auth.token])
