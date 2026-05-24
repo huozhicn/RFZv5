@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCustomerAuth } from '@/stores/auth'
 import { sdbQuery } from '@/lib/sdb'
+import { IconUser, IconMapPin, IconBox, IconLeaf } from '@/components/icons'
 
 interface OrderSummary {
   id: string; order_no: string; total_amount: number
@@ -77,7 +78,7 @@ export default function Profile() {
   if (!customer) {
     return (
       <div style={{ textAlign: 'center', padding: '40px 0' }}>
-        <div style={{ fontSize: 64, marginBottom: 12 }}>👤</div>
+        <div style={{ fontSize: 64, marginBottom: 12 }}><IconUser size={40} /></div>
         <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>登录后查看更多</div>
         <div style={{ fontSize: 13, color: '#999', marginBottom: 24 }}>查看订单、活动报名、管理个人信息</div>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
@@ -110,7 +111,7 @@ export default function Profile() {
 
       {/* Menu — 不含订单和活动（已在 Tab 中） */}
       <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
-        <MenuItem icon="📍" label="收货地址" onClick={() => nav('/address')} />
+        <MenuItem icon={<IconMapPin size={16} />} label="收货地址" onClick={() => nav('/address')} />
         <MenuItem icon="✏️" label="编辑资料" onClick={() => nav('/profile/edit')} />
         <MenuItem icon="🔒" label="修改密码" onClick={() => nav('/profile/password')} />
       </div>
@@ -130,13 +131,13 @@ export default function Profile() {
 
         {!loading && tab === 'orders' && orders.length === 0 && (
           <div className="empty-state" style={{ padding: 24 }}>
-            <div className="empty-icon">📦</div>
+            <div className="empty-icon"><IconBox size={40} /></div>
             <div className="empty-text">暂无订单</div>
           </div>
         )}
         {!loading && tab === 'activities' && activities.length === 0 && (
           <div className="empty-state" style={{ padding: 24 }}>
-            <div className="empty-icon">🎋</div>
+            <div className="empty-icon"><IconLeaf size={40} /></div>
             <div className="empty-text">暂无活动报名</div>
           </div>
         )}
@@ -195,7 +196,7 @@ export default function Profile() {
   )
 }
 
-function MenuItem({ icon, label, onClick }: { icon: string; label: string; onClick: () => void }) {
+function MenuItem({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
   return (
     <div onClick={onClick} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid #f5f5f5', cursor: 'pointer', fontSize: 15 }}>
       <span>{icon} {label}</span>

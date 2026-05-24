@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { sdbQuery, embed } from '@/lib/sdb'
+import { IconLeaf, IconBox, IconSearch } from '@/components/icons'
 
 interface ProductResult {
   id: string; name: string; main_image_url: string
@@ -105,7 +106,7 @@ export default function Search() {
       {/* Results */}
       {!loading && searched && results.length === 0 && (
         <div className="empty-state">
-          <div className="empty-icon">🔍</div>
+          <div className="empty-icon"><IconSearch size={40} /></div>
           <div className="empty-text">未找到「{query}」相关结果</div>
         </div>
       )}
@@ -117,8 +118,8 @@ export default function Search() {
               {p.main_image_url ? (
                 <img className="card-img" src={p.main_image_url} alt={p.name} loading="lazy" />
               ) : (
-                <div className="card-img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40, background: '#f0ebe3' }}>
-                  {p.product_type === '活动' ? '🎋' : '📦'}
+                <div className="card-img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f0eb' }}>
+                  {p.product_type === '活动' ? <IconLeaf size={32} /> : <IconBox size={32} />}
                 </div>
               )}
               <div className="card-body">

@@ -32,4 +32,19 @@ export const IconBook = (p: { size?: number }) => <Icon size={p.size} d="M4 19.5
 export const IconSparkles = (p: { size?: number }) => <Icon size={p.size} d="M12 3l1.5 5.5L19 9l-5.5 1.5L12 16l-1.5-5.5L5 9l5.5-1.5zM18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z" />
 export const IconShoppingBag = (p: { size?: number }) => <Icon size={p.size} d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0" />
 export const IconFlame = (p: { size?: number }) => <Icon size={p.size} d="M12 2C8.5 7 6 10 6 14a6 6 0 0 0 12 0c0-4-2.5-7-6-12z" />
+export const IconCalendar = (p: { size?: number }) => <Icon size={p.size} d="M19 4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zM16 2v4M8 2v4M3 10h18" />
 export const IconBeads = (p: { size?: number }) => <Icon size={p.size} d="M17 4a2 2 0 0 0-2 2v1a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zM7 15a2 2 0 0 0-2 2v1a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2v-1a2 2 0 0 0-2-2zM12 2a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h0a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1zM12 19a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h0a1 1 0 0 0 1-1v-1a1 1 0 0 0-1-1z" />
+export const IconSun = (p: { size?: number }) => <Icon size={p.size} d="M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+
+// Shared category → icon mapping
+export function CatIcon({ name, size = 22 }: { name: string; size?: number }) {
+  const m: Record<string, React.ReactNode> = {
+    '经书': <IconBook size={size} />,
+    '法器': <IconBell size={size} />,
+    '念珠': <IconBeads size={size} />,
+    '香品': <IconFlame size={size} />,
+    '佛像': <IconSparkles size={size} />,
+    '文创': <IconTag size={size} />,
+  }
+  return <>{m[name] || <IconBox size={size} />}</>
+}

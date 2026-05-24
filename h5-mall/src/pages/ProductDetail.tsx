@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { sdbQuery } from '@/lib/sdb'
 import { cartStore } from '@/stores/cart'
+import { IconBox } from '@/components/icons'
 
 interface ProductDetail {
   id: string
@@ -115,7 +116,7 @@ export default function ProductDetail() {
   }
 
   if (!product) {
-    return <div className="empty-state"><div className="empty-icon">😕</div><div className="empty-text">商品不存在</div></div>
+    return <div className="empty-state"><div className="empty-icon"><IconBox size={40} /></div><div className="empty-text">商品不存在</div></div>
   }
 
   // 活动类型 → 跳转活动详情
@@ -143,9 +144,7 @@ export default function ProductDetail() {
           )}
         </div>
       ) : (
-        <div style={{ aspectRatio: '1', background: '#f0ebe3', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 80 }}>
-          📦
-        </div>
+        <div style={{ aspectRatio: '1', background: '#f5f0eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IconBox size={40} /></div>
       )}
 
       {/* 商品信息 */}

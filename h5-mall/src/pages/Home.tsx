@@ -1,20 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { sdbQuery } from '@/lib/sdb'
-import { IconBook, IconBell, IconBox, IconBeads, IconFlame, IconSparkles, IconTag, IconLeaf } from '@/components/icons'
+import { IconBell, IconBox, IconLeaf, IconCalendar, IconMapPin, IconPhone, IconClock, CatIcon } from '@/components/icons'
 
-function CatIcon({ name }: { name: string }) {
-  const s = { width: 22, height: 22, color: '#999' }
-  const m: Record<string, React.ReactNode> = {
-    '经书': <IconBook size={22} />,
-    '法器': <IconBell size={22} />,
-    '念珠': <IconBeads size={22} />,
-    '香品': <IconFlame size={22} />,
-    '佛像': <IconSparkles size={22} />,
-    '文创': <IconTag size={22} />,
-  }
-  return <>{m[name] || <IconBox size={22} />}</>
-}
 
 interface CarouselItem { id: string; image_url: string; link_url?: string }
 interface CategoryItem { id: string; name: string }
@@ -176,11 +164,11 @@ export default function Home() {
                   {a.main_image_url ? (
                     <img src={a.main_image_url} alt={a.name} style={{ width: '100%', height: 110, objectFit: 'cover' }} loading="lazy" />
                   ) : (
-                    <div style={{ width: '100%', height: 110, background: '#f0ebe3', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>🎋</div>
+                    <div style={{ width: '100%', height: 110, background: '#f0ebe3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IconLeaf size={28} /></div>
                   )}
                   <div style={{ padding: 10 }}>
                     <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.name}</div>
-                    <div style={{ fontSize: 12, color: '#999', marginBottom: 6 }}>📅 {dateStr}</div>
+                    <div style={{ fontSize: 12, color: '#999', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4 }}><IconCalendar size={14} /> {dateStr}</div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: 15, fontWeight: 700, color: a.base_price > 0 ? '#c41e3a' : '#389e0d' }}>
                         {a.base_price > 0 ? `¥${a.base_price}` : '免费'}
@@ -209,7 +197,7 @@ export default function Home() {
                 {p.main_image_url ? (
                   <img className="card-img" src={p.main_image_url} alt={p.name} loading="lazy" />
                 ) : (
-                  <div className="card-img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>📦</div>
+                  <div className="card-img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f0eb' }}><IconBox size={32} /></div>
                 )}
                 <div className="card-body">
                   <div className="card-name">{p.name}</div>
@@ -253,9 +241,9 @@ export default function Home() {
       {/* 营业信息 */}
       {storeInfo && (
         <div style={{ marginTop: 24, background: '#fff', borderRadius: 12, padding: 16, fontSize: 13, color: '#666' }}>
-          <div style={{ marginBottom: 4 }}>📍 {storeInfo.address}</div>
-          <div style={{ marginBottom: 4 }}>📞 {storeInfo.phone}</div>
-          <div style={{ marginBottom: 8 }}>🕐 {storeInfo.business_hours}</div>
+          <div style={{ marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}><IconMapPin size={14} /> {storeInfo.address}</div>
+          <div style={{ marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}><IconPhone size={14} /> {storeInfo.phone}</div>
+          <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}><IconClock size={14} /> {storeInfo.business_hours}</div>
           <div onClick={() => nav('/store')} style={{ textAlign: 'center', color: '#c41e3a', cursor: 'pointer', paddingTop: 8, borderTop: '1px solid #f0f0f0' }}>
             查看流通处介绍 ›
           </div>

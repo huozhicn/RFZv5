@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { sdbQuery, embed } from '@/lib/sdb'
+import { CatIcon, IconHome, IconLeaf, IconSearch, IconBox } from '@/components/icons'
 
 interface Product {
   id: string
@@ -9,10 +10,6 @@ interface Product {
   product_type: string
   category_name: string
   min_price: number
-}
-
-const CAT_LABELS: Record<string, string> = {
-  '经书': '📖', '法器': '🔔', '念珠': '📿', '香品': '🕯️', '佛像': '🧘', '文创': '🎨',
 }
 
 // Special category value for activity filter
@@ -95,37 +92,40 @@ export default function ProductList() {
     setSearch('')
   }
 
+  const chipBase = { border: '1px solid #e8e2d8', background: '#fff' }
+  const chipActive = { border: '1px solid #333', background: '#fafaf6' }
+
   return (
     <div>
       {/* 搜索栏 */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
         <input type="text" placeholder="搜索法宝或活动..." value={search}
           onChange={e => setSearch(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleSearch()}
-          style={{ flex: 1, padding: '8px 14px', border: '1px solid #e8e8e8', borderRadius: 20, fontSize: 14, background: '#fff' }} />
+          style={{ flex: 1, padding: '10px 0', border: 'none', borderBottom: '1px solid #e8e2d8', fontSize: 14, background: 'transparent', color: '#333' }} />
         <button onClick={handleSearch}
-          style={{ padding: '8px 16px', background: '#c41e3a', color: '#fff', borderRadius: 20, fontSize: 13 }}>搜索</button>
+          style={{ padding: '10px 16px', color: '#333', fontSize: 14 }}><IconSearch size={18} /></button>
       </div>
 
       {/* 分类筛选 */}
       <div className="category-row" style={{ marginBottom: 4 }}>
-        <div className={`category-chip${!activeCat ? ' selected' : ''}`}
+        <div className="category-chip"
           onClick={() => { setActiveCat(''); setSearch('') }}
-          style={!activeCat ? { border: '2px solid #c41e3a', background: '#fff5f5' } : {}}>
-          <span className="chip-icon">🏠</span>
+          style={!activeCat ? chipActive : chipBase}>
+          <IconHome size={20} />
           <span className="chip-label">全部</span>
         </div>
-        <div className={`category-chip${activeCat === ACTIVITY_CAT ? ' selected' : ''}`}
+        <div className="category-chip"
           onClick={() => selectCat(ACTIVITY_CAT)}
-          style={activeCat === ACTIVITY_CAT ? { border: '2px solid #c41e3a', background: '#fff5f5' } : {}}>
-          <span className="chip-icon">🎋</span>
+          style={activeCat === ACTIVITY_CAT ? chipActive : chipBase}>
+          <IconLeaf size={20} />
           <span className="chip-label">活动</span>
         </div>
         {categories.map(cat => (
-          <div key={cat.id} className={`category-chip${activeCat === cat.id ? ' selected' : ''}`}
+          <div key={cat.id} className="category-chip"
             onClick={() => selectCat(cat.id)}
-            style={activeCat === cat.id ? { border: '2px solid #c41e3a', background: '#fff5f5' } : {}}>
-            <span className="chip-icon">{CAT_LABELS[cat.name] || '📦'}</span>
+            style={activeCat === cat.id ? chipActive : chipBase}>
+            <CatIcon name={cat.name} size={20} />
             <span className="chip-label">{cat.name}</span>
           </div>
         ))}
@@ -135,12 +135,12 @@ export default function ProductList() {
       {loading ? (
         <div className="product-grid">
           {[1,2,3,4,5,6].map(i => (
-            <div key={i} className="skeleton" style={{ aspectRatio: '3/4', borderRadius: 12 }} />
+            <div key={i} className="skeleton" style={{ aspectRatio: '3/4' }} />
           ))}
         </div>
       ) : products.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-icon">🔍</div>
+          <div className="empty-icon"><IconSearch size={40} /></div>
           <div className="empty-text">{activeCat === ACTIVITY_CAT ? '暂无活动' : '没有找到相关法宝'}</div>
         </div>
       ) : (
@@ -151,18 +151,18 @@ export default function ProductList() {
               {p.main_image_url ? (
                 <img className="card-img" src={p.main_image_url} alt={p.name} loading="lazy" />
               ) : (
-                <div className="card-img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 48, background: '#f0ebe3' }}>
-                  {p.product_type === '活动' ? '🎋' : CAT_LABELS[p.category_name] || '📦'}
+                <div className="card-img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f0eb' }}>
+                  {p.product_type === '活动' ? <IconLeaf size={32} /> : <CatIcon name={p.category_name} size={32} />}
                 </div>
               )}
               <div className="card-body">
                 <div className="card-name">{p.name}</div>
                 {p.product_type === '活动' ? (
-                  <div className="card-price" style={{ color: '#389e0d', fontSize: 13 }}>查看活动 ›</div>
+                  <div className="card-price" style={{ color: '#999', fontSize: 12 }}>查看活动</div>
                 ) : p.min_price > 0 ? (
                   <div className="card-price">¥{p.min_price}</div>
                 ) : (
-                  <div className="card-price" style={{ color: '#389e0d' }}>免费</div>
+                  <div className="card-price" style={{ color: '#999' }}>免费</div>
                 )}
               </div>
             </div>

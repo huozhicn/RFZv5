@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { sdbQuery } from '@/lib/sdb'
 import { useCustomerAuth } from '@/stores/auth'
+import { IconCheck, IconBox } from '@/components/icons'
 
 interface OrderInfo {
   id: string
@@ -85,7 +86,7 @@ export default function OrderSuccess() {
   }
 
   if (!order) {
-    return <div className="empty-state"><div className="empty-icon">😕</div><div className="empty-text">订单不存在</div></div>
+    return <div className="empty-state"><div className="empty-icon"><IconBox size={40} /></div><div className="empty-text">订单不存在</div></div>
   }
 
   const statusInfo = STATUS_LABELS[order.status] || { label: order.status, cls: '' }
@@ -93,7 +94,7 @@ export default function OrderSuccess() {
   return (
     <div>
       <div style={{ textAlign: 'center', padding: '32px 0 20px' }}>
-        <div style={{ fontSize: 64, marginBottom: 12 }}>✅</div>
+        <div style={{ fontSize: 64, marginBottom: 12 }}><IconCheck size={40} /></div>
         <div style={{ fontSize: 20, fontWeight: 600, marginBottom: 4 }}>
           {order.payment_method === '线下付款' ? '下单成功，请到店付款' : '下单成功'}
         </div>
@@ -116,7 +117,7 @@ export default function OrderSuccess() {
             {item.product_image ? (
               <img src={item.product_image} alt="" style={{ width: 48, height: 48, borderRadius: 6, objectFit: 'cover', background: '#f0ebe3' }} />
             ) : (
-              <div style={{ width: 48, height: 48, borderRadius: 6, background: '#f0ebe3', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>📦</div>
+              <div style={{ width: 48, height: 48, background: '#f5f0eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IconBox size={20} /></div>
             )}
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 14, fontWeight: 500 }}>{item.product_name}</div>
@@ -141,7 +142,7 @@ export default function OrderSuccess() {
 
       {order.payment_method === '线下付款' && (
         <div style={{ background: '#fff7e6', borderRadius: 8, padding: 12, marginTop: 12, fontSize: 13, color: '#d46b08' }}>
-          💡 请到店出示订单号 <strong>{order.order_no}</strong> 完成付款。店员确认收款后，订单状态会更新。
+          请到店出示订单号 <strong>{order.order_no}</strong> 完成付款。店员确认收款后，订单状态会更新。
         </div>
       )}
 
