@@ -34,22 +34,47 @@ export default function Home() {
   async function loadAll() {
     try {
       const [carouselRes, catRes, featRes, storeRes, annRes, actRes] = await Promise.all([
-        sdbQuery<any[]>('SELECT id, image_url, link_url FROM carousel WHERE is_active=true ORDER BY sort_order LIMIT 5'),
-        sdbQuery<any[]>('SELECT id, name FROM product_category ORDER BY sort_order'),
-        sdbQuery<any[]>('SELECT id, product.name, product.main_image_url, product.id AS productId, variant.id AS variantId, (SELECT price FROM pricing WHERE variant=variant.id AND is_active=true LIMIT 1)[0].price AS price FROM featured_product FETCH product FETCH variant ORDER BY sort_order LIMIT 6'),
+        sdbQuery<any[]>('SELECT id, image_url, link_url, sort_order FROM carousel WHERE is_active=true ORDER BY sort_order LIMIT 5'),
+        sdbQuery<any[]>('SELECT id, name, sort_order FROM product_category ORDER BY sort_order'),
+        sdbQuery<any[]>('SELECT id, product.name AS product_name, product.main_image_url, product.id AS productId, sort_order FROM featured_product ORDER BY sort_order LIMIT 6 FETCH product'),
         sdbQuery<any[]>('SELECT * FROM store_info LIMIT 1'),
-        sdbQuery<any[]>('SELECT id, title, content FROM announcement WHERE is_active=true ORDER BY created_at DESC LIMIT 3'),
-        sdbQuery<any[]>(`SELECT id, name, main_image_url, base_price, start_date, end_date, cycle_description, capacity FROM product WHERE product_type='活动' AND is_listed=true ORDER BY created_at DESC LIMIT 10`),
+        sdbQuery<any[]>('SELECT id, title, content, created_at FROM announcement WHERE is_active=true ORDER BY created_at DESC LIMIT 3'),
+        sdbQuery<any[]>(`SELECT id, name, main_image_url, base_price, start_date, end_date, cycle_description, capacity, created_at FROM product WHERE product_type='活动' AND is_listed=true ORDER BY created_at DESC LIMIT 10`),
       ])
       setCarousels(carouselRes || [])
       setCategories(catRes || [])
-      setFeatured((featRes || []).map((f: any) => ({
-        id: f.productId || f.id, name: f.product?.name || f.name || '',
-        main_image_url: f.product?.main_image_url || '', price: f.price || 0,
-        variantId: f.variantId || f.variant?.id || '',
-      })).filter((f: any) => f.name))
+      setFeatured([]) // will populate below
       setStoreInfo((storeRes || [])[0] || null)
       setAnnouncements(annRes || [])
+
+      // Process featured: get pricing + variant for each
+      if (featRes && featRes.length > 0) {
+        const featuredItems: ProductWithPrice[] = []
+        for (const f of featRes) {
+          const pid = f.productId
+          try {
+            const varRows = await sdbQuery<any[]>(
+              `SELECT id FROM product_variant WHERE spu=${pid} LIMIT 1`
+            )
+            const vid = varRows?.[0]?.id || ''
+            let price = 0
+            if (vid) {
+              const priceRows = await sdbQuery<any[]>(
+                `SELECT price FROM pricing WHERE variant=${vid} AND is_active=true LIMIT 1`
+              )
+              price = priceRows?.[0]?.price || 0
+            }
+            featuredItems.push({
+              id: pid,
+              name: f.product_name || '',
+              main_image_url: f.main_image_url || '',
+              price,
+              variantId: vid,
+            })
+          } catch {}
+        }
+        setFeatured(featuredItems.filter(x => x.name))
+      }
 
       // Load signup counts for each activity
       const actList: ActivityItem[] = []
@@ -80,7 +105,7 @@ export default function Home() {
   return (
     <div>
       {/* 轮播图 */}
-      {carousels.length > 0 && (
+      {carousels.filter(c => c.image_url).length > 0 && (
         <div className="carousel">
           <img src={carousels[carouselIdx].image_url} alt="" />
           {carousels.length > 1 && (

@@ -20,7 +20,7 @@ export default function Activities() {
   async function loadActivities() {
     try {
       const rows = await sdbQuery<any[]>(
-        `SELECT id, name, description, main_image_url, base_price, start_date, end_date, cycle_description, capacity FROM product WHERE product_type='活动' AND is_listed=true ORDER BY created_at DESC`
+        `SELECT id, name, description, main_image_url, base_price, start_date, end_date, cycle_description, capacity, created_at FROM product WHERE product_type='活动' AND is_listed=true ORDER BY created_at DESC`
       )
       if (!rows) { setLoading(false); return }
 
@@ -88,7 +88,16 @@ export default function Activities() {
         const remaining = a.capacity > 0 ? a.capacity - a.signup_count : 999
         const isFull = a.capacity > 0 && remaining <= 0
         const dateLabel = isOneTime
-          ? `${formatDate(a.start_date)}${a.end_date ? ' ~ ' + formatDate(a.end_date).split(' ')[0] : ''}`
+          ? (() => {
+              const sd = formatDate(a.start_date)
+              if (!a.end_date) return sd
+              const ed = formatDate(a.end_date)
+              // Same day: show time range only
+              if (sd.split(' ')[0] === ed.split(' ')[0]) {
+                return `${sd} ~ ${ed.split(' ')[1]}`
+              }
+              return `${sd} ~ ${ed.split(' ')[0]}`
+            })()
           : a.cycle_description || '长期活动'
 
         return (
@@ -153,7 +162,7 @@ export default function Activities() {
         </div>
       )}
 
-      <div style={{ height: 16 }} />
+      <div style={{ height: 80 }} />
     </div>
   )
 }

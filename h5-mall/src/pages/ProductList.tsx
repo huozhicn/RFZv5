@@ -38,7 +38,7 @@ export default function ProductList() {
     try {
       const [prodRes, catRes] = await Promise.all([
         loadProducts(activeCat, search),
-        sdbQuery<{ id: string; name: string }[]>('SELECT id, name FROM product_category ORDER BY sort_order'),
+        sdbQuery<{ id: string; name: string }[]>('SELECT id, name, sort_order FROM product_category ORDER BY sort_order'),
       ])
       setProducts(prodRes)
       setCategories(catRes || [])
@@ -51,14 +51,15 @@ export default function ProductList() {
 
   async function loadProducts(catId: string, q: string): Promise<Product[]> {
     let sql: string
+    const baseFields = 'id, name, main_image_url, product_type, category.name AS category_name, created_at'
     if (q) {
-      sql = `SELECT id, name, main_image_url, product_type, category.name AS category_name FROM product WHERE is_listed=true AND name CONTAINS '${q.replace(/'/g, "\\'")}' ORDER BY created_at DESC LIMIT 30`
+      sql = `SELECT ${baseFields} FROM product WHERE is_listed=true AND name CONTAINS '${q.replace(/'/g, "\\'")}' ORDER BY created_at DESC LIMIT 30`
     } else if (catId === ACTIVITY_CAT) {
-      sql = `SELECT id, name, main_image_url, product_type, category.name AS category_name FROM product WHERE is_listed=true AND product_type='活动' ORDER BY created_at DESC LIMIT 30`
+      sql = `SELECT ${baseFields} FROM product WHERE is_listed=true AND product_type='活动' ORDER BY created_at DESC LIMIT 30`
     } else if (catId) {
-      sql = `SELECT id, name, main_image_url, product_type, category.name AS category_name FROM product WHERE is_listed=true AND category=${catId} ORDER BY created_at DESC LIMIT 30`
+      sql = `SELECT ${baseFields} FROM product WHERE is_listed=true AND category=${catId} ORDER BY created_at DESC LIMIT 30`
     } else {
-      sql = `SELECT id, name, main_image_url, product_type, category.name AS category_name FROM product WHERE is_listed=true ORDER BY created_at DESC LIMIT 30`
+      sql = `SELECT ${baseFields} FROM product WHERE is_listed=true ORDER BY created_at DESC LIMIT 30`
     }
     
     const rows = await sdbQuery<any[]>(sql)
