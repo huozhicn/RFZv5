@@ -1,9 +1,19 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { sdbQuery } from '@/lib/sdb'
+import { IconBook, IconBell, IconBox, IconBeads, IconFlame, IconSparkles, IconTag, IconLeaf } from '@/components/icons'
 
-const CAT_ICONS: Record<string, string> = {
-  '经书': '📖', '法器': '🔔', '念珠': '📿', '香品': '🕯️', '佛像': '🧘', '文创': '🎨',
+function CatIcon({ name }: { name: string }) {
+  const s = { width: 22, height: 22, color: '#999' }
+  const m: Record<string, React.ReactNode> = {
+    '经书': <IconBook size={22} />,
+    '法器': <IconBell size={22} />,
+    '念珠': <IconBeads size={22} />,
+    '香品': <IconFlame size={22} />,
+    '佛像': <IconSparkles size={22} />,
+    '文创': <IconTag size={22} />,
+  }
+  return <>{m[name] || <IconBox size={22} />}</>
 }
 
 interface CarouselItem { id: string; image_url: string; link_url?: string }
@@ -136,7 +146,7 @@ export default function Home() {
           <div className="category-row">
             {categories.map(cat => (
               <div key={cat.id} className="category-chip" onClick={() => nav(`/products?cat=${cat.id}`)}>
-                <span className="chip-icon">{CAT_ICONS[cat.name] || '📦'}</span>
+                <CatIcon name={cat.name} />
                 <span className="chip-label">{cat.name}</span>
               </div>
             ))}
@@ -228,7 +238,7 @@ export default function Home() {
               <div key={a.id} className="announce-bar"
                 onClick={handleClick}
                 style={{ cursor: (a.link_type && a.link_target) ? 'pointer' : 'default' }}>
-                <span className="ann-icon">📢</span>
+                <span className="ann-icon"><IconBell size={18} /></span>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 500, marginBottom: 2 }}>{a.title}</div>
                   <div style={{ fontSize: 12, color: '#999' }}>{a.content}</div>

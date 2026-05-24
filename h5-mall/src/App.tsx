@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import { useCart } from '@/stores/cart'
 import { useCustomerAuth } from '@/stores/auth'
+import { IconHome, IconGrid, IconLeaf, IconCart, IconUser, IconSearch } from '@/components/icons'
 import Home from '@/pages/Home'
 import ProductList from '@/pages/ProductList'
 import ProductDetail from '@/pages/ProductDetail'
@@ -21,23 +22,21 @@ function TabBar() {
   const nav = useNavigate()
   const loc = useLocation()
   const cart = useCart()
-  const auth = useCustomerAuth()
 
   const tabs = [
-    { path: '/', icon: '🏠', label: '首页' },
-    { path: '/products', icon: '📂', label: '分类' },
-    { path: '/activities', icon: '🎋', label: '活动' },
-    { path: '/cart', icon: '🛒', label: '购物车', badge: cart.count },
-    { path: '/orders', icon: '👤', label: '我的' },
+    { path: '/', Icon: IconHome, label: '首页' },
+    { path: '/products', Icon: IconGrid, label: '分类' },
+    { path: '/activities', Icon: IconLeaf, label: '活动' },
+    { path: '/cart', Icon: IconCart, label: '购物车', badge: cart.count },
+    { path: '/orders', Icon: IconUser, label: '我的' },
   ]
 
   return (
-    <nav className="tab-bar" style={{ padding: '4px 0' }}>
+    <nav className="tab-bar">
       {tabs.map(t => (
         <div key={t.path} className={`tab-item${loc.pathname === t.path ? ' active' : ''}`}
-          onClick={() => nav(t.path)}
-          style={{ fontSize: 10, padding: '2px 8px' }}>
-          <span className="tab-icon" style={{ fontSize: 20 }}>{t.icon}</span>
+          onClick={() => nav(t.path)}>
+          <t.Icon size={20} />
           <span>{t.label}</span>
           {t.badge ? <span className="badge">{t.badge}</span> : null}
         </div>
@@ -63,7 +62,7 @@ function AppShell() {
   return (
     <div className="app-shell">
       <TopNav />
-      <div className="page-content" style={{ paddingBottom: showTabs ? 76 : 16 }}>
+      <div className="page-content">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/products" element={<ProductList />} />
@@ -118,21 +117,16 @@ function TopNav() {
 
   return (
     <div className="top-nav">
-      {/* Left: home icon (hidden on home page itself) */}
       {isHome ? (
-        <div style={{ width: 32 }} />
+        <div style={{ width: 28 }} />
       ) : (
-        <button onClick={() => nav('/')} style={{ background: 'none', color: '#fff', fontSize: 20, padding: '4px 8px', lineHeight: 1 }}
-          aria-label="回到首页">🏠</button>
+        <button onClick={() => nav('/')} aria-label="回到首页"><IconHome size={20} /></button>
       )}
-      {/* Center: title */}
       <h1 style={{ flex: 1, textAlign: 'center' }}>{title}</h1>
-      {/* Right: search icon */}
       {loc.pathname === '/search' ? (
-        <div style={{ width: 32 }} />
+        <div style={{ width: 28 }} />
       ) : (
-        <button onClick={() => nav('/search')} style={{ background: 'none', color: '#fff', fontSize: 20, padding: '4px 8px', lineHeight: 1 }}
-          aria-label="搜索">🔍</button>
+        <button onClick={() => nav('/search')} aria-label="搜索"><IconSearch size={20} /></button>
       )}
     </div>
   )
