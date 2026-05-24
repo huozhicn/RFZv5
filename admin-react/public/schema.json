@@ -1,119 +1,74 @@
 {
-  "product": {
-    "name": "product",
+  "announcement": {
+    "name": "announcement",
     "fields": [
       {
-        "name": "name",
+        "name": "content",
         "kind": "string",
-        "comment": "产品名称"
-      },
-      {
-        "name": "description",
-        "kind": "string",
-        "comment": "",
-        "default": "'' COMMENT '产品介绍'"
-      },
-      {
-        "name": "main_image_url",
-        "kind": "string",
-        "comment": "",
-        "default": "'' COMMENT '主图'"
-      },
-      {
-        "name": "detail_image_urls",
-        "kind": "array<string>",
-        "comment": "",
-        "default": "[] COMMENT '详情图'"
-      },
-      {
-        "name": "category",
-        "kind": "record<product_category>",
-        "comment": "",
-        "default": "NONE COMMENT '类目'"
-      },
-      {
-        "name": "base_price",
-        "kind": "float",
-        "comment": "",
-        "default": "0 COMMENT '如法造基准价'"
-      },
-      {
-        "name": "sync_source_id",
-        "kind": "string",
-        "comment": "如法造产品ID"
-      },
-      {
-        "name": "synced_at",
-        "kind": "datetime",
-        "comment": "",
-        "default": "time::now() COMMENT '同步时间'"
+        "comment": "内容",
+        "assert": null,
+        "default": null
       },
       {
         "name": "created_at",
         "kind": "datetime",
-        "comment": ""
+        "comment": "",
+        "assert": null,
+        "default": null
       },
       {
-        "name": "updated_at",
-        "kind": "datetime",
-        "comment": ""
+        "name": "is_active",
+        "kind": "bool",
+        "comment": "启用",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "title",
+        "kind": "string",
+        "comment": "标题",
+        "assert": null,
+        "default": null
       }
     ]
   },
-  "product_category": {
-    "name": "product_category",
+  "carousel": {
+    "name": "carousel",
     "fields": [
       {
-        "name": "name",
+        "name": "created_at",
+        "kind": "datetime",
+        "comment": "",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "image_url",
         "kind": "string",
-        "comment": "类目名称"
+        "comment": "图片地址",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "is_active",
+        "kind": "bool",
+        "comment": "启用",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "link_url",
+        "kind": "string",
+        "comment": "跳转链接",
+        "assert": null,
+        "default": null
       },
       {
         "name": "sort_order",
         "kind": "int",
-        "comment": "",
-        "default": "0 COMMENT '排序'"
-      },
-      {
-        "name": "created_at",
-        "kind": "datetime",
-        "comment": ""
-      }
-    ]
-  },
-  "product_variant": {
-    "name": "product_variant",
-    "fields": [
-      {
-        "name": "sku",
-        "kind": "string",
-        "comment": "SKU编码"
-      },
-      {
-        "name": "name",
-        "kind": "string",
-        "comment": "规格名称"
-      },
-      {
-        "name": "spu",
-        "kind": "record<product>",
-        "comment": "所属SPU"
-      },
-      {
-        "name": "base_price",
-        "kind": "float",
-        "comment": "",
-        "default": "0 COMMENT '如法造基准价'"
-      },
-      {
-        "name": "sync_source_id",
-        "kind": "string",
-        "comment": "如法造SKU ID"
-      },
-      {
-        "name": "created_at",
-        "kind": "datetime",
-        "comment": ""
+        "comment": "排序",
+        "assert": null,
+        "default": null
       }
     ]
   },
@@ -121,95 +76,79 @@
     "name": "customer",
     "fields": [
       {
-        "name": "name",
-        "kind": "string",
-        "comment": "姓名"
-      },
-      {
-        "name": "phone",
-        "kind": "string",
-        "comment": "",
-        "default": "'' COMMENT '电话'"
-      },
-      {
-        "name": "wechat",
-        "kind": "string",
-        "comment": "",
-        "default": "'' COMMENT '微信'"
-      },
-      {
         "name": "address",
         "kind": "string",
+        "comment": "地址",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "kind": "datetime",
         "comment": "",
-        "default": "'' COMMENT '地址'"
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "name",
+        "kind": "string",
+        "comment": "姓名",
+        "assert": null,
+        "default": null
       },
       {
         "name": "notes",
         "kind": "string",
-        "comment": "",
-        "default": "'' COMMENT '备注'"
+        "comment": "备注",
+        "assert": null,
+        "default": null
       },
       {
-        "name": "created_at",
-        "kind": "datetime",
-        "comment": ""
-      },
-      {
-        "name": "updated_at",
-        "kind": "datetime",
-        "comment": ""
-      }
-    ]
-  },
-  "pricing": {
-    "name": "pricing",
-    "fields": [
-      {
-        "name": "variant",
-        "kind": "record<product_variant>",
-        "comment": "SKU"
-      },
-      {
-        "name": "price",
-        "kind": "float",
-        "comment": "售价"
-      },
-      {
-        "name": "is_active",
-        "kind": "bool",
-        "comment": "",
-        "default": "true COMMENT '启用'"
-      },
-      {
-        "name": "created_at",
-        "kind": "datetime",
-        "comment": ""
+        "name": "phone",
+        "kind": "string",
+        "comment": "电话",
+        "assert": null,
+        "default": null
       },
       {
         "name": "updated_at",
         "kind": "datetime",
-        "comment": ""
+        "comment": "",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "wechat",
+        "kind": "string",
+        "comment": "微信",
+        "assert": null,
+        "default": null
       }
     ]
   },
-  "store_inventory": {
-    "name": "store_inventory",
+  "featured_product": {
+    "name": "featured_product",
     "fields": [
       {
-        "name": "variant",
-        "kind": "record<product_variant>",
-        "comment": "SKU"
+        "name": "created_at",
+        "kind": "datetime",
+        "comment": "",
+        "assert": null,
+        "default": null
       },
       {
-        "name": "quantity",
+        "name": "product",
+        "kind": "record<product>",
+        "comment": "商品",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "sort_order",
         "kind": "int",
-        "comment": "",
-        "default": "0 COMMENT '数量'"
-      },
-      {
-        "name": "updated_at",
-        "kind": "datetime",
-        "comment": ""
+        "comment": "排序",
+        "assert": null,
+        "default": null
       }
     ]
   },
@@ -217,134 +156,276 @@
     "name": "inventory_count",
     "fields": [
       {
-        "name": "variant",
-        "kind": "record<product_variant>",
-        "comment": "SKU"
-      },
-      {
-        "name": "prev_stock",
-        "kind": "int",
-        "comment": "",
-        "default": "0 COMMENT '盘点前库存'"
-      },
-      {
         "name": "actual_stock",
         "kind": "int",
-        "comment": "",
-        "default": "0 COMMENT '实盘库存'"
-      },
-      {
-        "name": "diff",
-        "kind": "int",
-        "comment": "",
-        "default": "0 COMMENT '差异'"
-      },
-      {
-        "name": "reason",
-        "kind": "string",
-        "comment": "",
-        "default": "'' COMMENT '原因'"
+        "comment": "实盘库存",
+        "assert": null,
+        "default": null
       },
       {
         "name": "counted_by",
         "kind": "record<user>",
-        "comment": "盘点人"
+        "comment": "盘点人",
+        "assert": null,
+        "default": null
       },
       {
         "name": "created_at",
         "kind": "datetime",
-        "comment": ""
-      }
-    ]
-  },
-  "sales_order": {
-    "name": "sales_order",
-    "fields": [
+        "comment": "",
+        "assert": null,
+        "default": null
+      },
       {
-        "name": "order_no",
+        "name": "prev_stock",
+        "kind": "int",
+        "comment": "盘点前库存",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "reason",
         "kind": "string",
-        "comment": "订单号"
-      },
-      {
-        "name": "customer",
-        "kind": "record<customer>",
-        "comment": "",
-        "default": "NONE COMMENT '客户'"
-      },
-      {
-        "name": "total_amount",
-        "kind": "float",
-        "comment": "",
-        "default": "0 COMMENT '总金额'"
-      },
-      {
-        "name": "status",
-        "kind": "string",
-        "comment": "",
-        "assert": "$value IN ['待付款', '已付款', '已发货', '已完成', '已取消']",
-        "default": "'待付款' COMMENT '状态'"
-      },
-      {
-        "name": "notes",
-        "kind": "string",
-        "comment": "",
-        "default": "'' COMMENT '备注'"
-      },
-      {
-        "name": "sync_status",
-        "kind": "string",
-        "comment": "",
-        "assert": "$value IN ['pending', 'synced', 'failed']",
-        "default": "'pending' COMMENT '同步状态'"
-      },
-      {
-        "name": "synced_at",
-        "kind": "datetime",
-        "comment": "",
-        "default": "NONE COMMENT '同步时间'"
-      },
-      {
-        "name": "created_by",
-        "kind": "record<user>",
-        "comment": "操作人"
-      },
-      {
-        "name": "created_at",
-        "kind": "datetime",
-        "comment": ""
-      }
-    ]
-  },
-  "order_item": {
-    "name": "order_item",
-    "fields": [
-      {
-        "name": "order",
-        "kind": "record<sales_order>",
-        "comment": "订单"
+        "comment": "原因",
+        "assert": null,
+        "default": null
       },
       {
         "name": "variant",
         "kind": "record<product_variant>",
-        "comment": "SKU"
+        "comment": "SKU",
+        "assert": null,
+        "default": null
+      }
+    ]
+  },
+  "pricing": {
+    "name": "pricing",
+    "fields": [
+      {
+        "name": "created_at",
+        "kind": "datetime",
+        "comment": "",
+        "assert": null,
+        "default": null
       },
       {
-        "name": "quantity",
+        "name": "is_active",
+        "kind": "bool",
+        "comment": "启用",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "price",
+        "kind": "float",
+        "comment": "售价",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "kind": "datetime",
+        "comment": "",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "variant",
+        "kind": "record<product_variant>",
+        "comment": "SKU",
+        "assert": null,
+        "default": null
+      }
+    ]
+  },
+  "product": {
+    "name": "product",
+    "fields": [
+      {
+        "name": "base_price",
+        "kind": "float",
+        "comment": "如法造基准价",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "capacity",
         "kind": "int",
-        "comment": "",
-        "default": "1 COMMENT '数量'"
+        "comment": "报名上限(0=不限)",
+        "assert": null,
+        "default": null
       },
       {
-        "name": "unit_price",
-        "kind": "float",
-        "comment": "",
-        "default": "0 COMMENT '单价'"
+        "name": "category",
+        "kind": "record<product_category>",
+        "comment": "类目",
+        "assert": null,
+        "default": null
       },
       {
-        "name": "amount",
-        "kind": "float",
+        "name": "created_at",
+        "kind": "datetime",
         "comment": "",
-        "default": "0 COMMENT '小计'"
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "cycle_description",
+        "kind": "string",
+        "comment": "周期说明",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "description",
+        "kind": "string",
+        "comment": "产品介绍",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "detail_image_urls",
+        "kind": "array<string>",
+        "comment": "详情图",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "end_date",
+        "kind": "datetime",
+        "comment": "活动截止日期",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "is_listed",
+        "kind": "bool",
+        "comment": "上架",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "main_image_url",
+        "kind": "string",
+        "comment": "主图",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "name",
+        "kind": "string",
+        "comment": "产品名称",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "product_type",
+        "kind": "string",
+        "comment": "类型",
+        "assert": "$value INSIDE ['商品', '活动']",
+        "default": null
+      },
+      {
+        "name": "start_date",
+        "kind": "datetime",
+        "comment": "活动开始日期",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "sync_source_id",
+        "kind": "string",
+        "comment": "如法造产品ID",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "synced_at",
+        "kind": "datetime",
+        "comment": "同步时间",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "kind": "datetime",
+        "comment": "",
+        "assert": null,
+        "default": null
+      }
+    ]
+  },
+  "product_category": {
+    "name": "product_category",
+    "fields": [
+      {
+        "name": "created_at",
+        "kind": "datetime",
+        "comment": "",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "name",
+        "kind": "string",
+        "comment": "类目名称",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "sort_order",
+        "kind": "int",
+        "comment": "排序",
+        "assert": null,
+        "default": null
+      }
+    ]
+  },
+  "product_variant": {
+    "name": "product_variant",
+    "fields": [
+      {
+        "name": "base_price",
+        "kind": "float",
+        "comment": "如法造基准价",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "kind": "datetime",
+        "comment": "",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "name",
+        "kind": "string",
+        "comment": "规格名称",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "sku",
+        "kind": "string",
+        "comment": "SKU编码",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "spu",
+        "kind": "record<product>",
+        "comment": "所属SPU",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "sync_source_id",
+        "kind": "string",
+        "comment": "如法造SKU ID",
+        "assert": null,
+        "default": null
       }
     ]
   },
@@ -352,38 +433,201 @@
     "name": "restock_request",
     "fields": [
       {
-        "name": "variant",
-        "kind": "record<product_variant>",
-        "comment": "SKU"
-      },
-      {
-        "name": "quantity",
-        "kind": "int",
+        "name": "created_at",
+        "kind": "datetime",
         "comment": "",
-        "default": "0 COMMENT '数量'"
-      },
-      {
-        "name": "reason",
-        "kind": "string",
-        "comment": "",
-        "default": "'' COMMENT '原因'"
-      },
-      {
-        "name": "status",
-        "kind": "string",
-        "comment": "",
-        "assert": "$value IN ['待处理', '已处理', '已拒绝']",
-        "default": "'待处理' COMMENT '状态'"
+        "assert": null,
+        "default": null
       },
       {
         "name": "created_by",
         "kind": "record<user>",
-        "comment": "操作人"
+        "comment": "操作人",
+        "assert": null,
+        "default": null
       },
+      {
+        "name": "quantity",
+        "kind": "int",
+        "comment": "数量",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "reason",
+        "kind": "string",
+        "comment": "原因",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "status",
+        "kind": "string",
+        "comment": "状态",
+        "assert": "$value INSIDE ['待处理', '已处理', '已拒绝']",
+        "default": null
+      },
+      {
+        "name": "variant",
+        "kind": "record<product_variant>",
+        "comment": "SKU",
+        "assert": null,
+        "default": null
+      }
+    ]
+  },
+  "sales_order": {
+    "name": "sales_order",
+    "fields": [
       {
         "name": "created_at",
         "kind": "datetime",
-        "comment": ""
+        "comment": "",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "created_by",
+        "kind": "record<user>",
+        "comment": "操作人",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "customer",
+        "kind": "record<customer>",
+        "comment": "客户",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "notes",
+        "kind": "string",
+        "comment": "备注",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "order_no",
+        "kind": "string",
+        "comment": "订单号",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "payment_method",
+        "kind": "string",
+        "comment": "支付方式",
+        "assert": "$value INSIDE ['在线支付', '线下付款']",
+        "default": null
+      },
+      {
+        "name": "status",
+        "kind": "string",
+        "comment": "状态",
+        "assert": "$value INSIDE ['待付款', '已付款', '已发货', '已完成', '已取消']",
+        "default": null
+      },
+      {
+        "name": "sync_status",
+        "kind": "string",
+        "comment": "同步状态",
+        "assert": "$value INSIDE ['pending', 'synced', 'failed']",
+        "default": null
+      },
+      {
+        "name": "synced_at",
+        "kind": "datetime",
+        "comment": "同步时间",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "total_amount",
+        "kind": "float",
+        "comment": "总金额",
+        "assert": null,
+        "default": null
+      }
+    ]
+  },
+  "store_info": {
+    "name": "store_info",
+    "fields": [
+      {
+        "name": "address",
+        "kind": "string",
+        "comment": "地址",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "business_hours",
+        "kind": "string",
+        "comment": "营业时间",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "description",
+        "kind": "string",
+        "comment": "简介",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "logo_url",
+        "kind": "string",
+        "comment": "Logo",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "name",
+        "kind": "string",
+        "comment": "流通处名称",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "phone",
+        "kind": "string",
+        "comment": "电话",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "kind": "datetime",
+        "comment": "",
+        "assert": null,
+        "default": null
+      }
+    ]
+  },
+  "store_inventory": {
+    "name": "store_inventory",
+    "fields": [
+      {
+        "name": "quantity",
+        "kind": "int",
+        "comment": "数量",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "kind": "datetime",
+        "comment": "",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "variant",
+        "kind": "record<product_variant>",
+        "comment": "SKU",
+        "assert": null,
+        "default": null
       }
     ]
   },
@@ -391,88 +635,39 @@
     "name": "user",
     "fields": [
       {
-        "name": "name",
-        "kind": "string",
-        "comment": "用户名"
+        "name": "created_at",
+        "kind": "datetime",
+        "comment": "",
+        "assert": null,
+        "default": null
       },
       {
         "name": "display_name",
         "kind": "string",
-        "comment": "",
-        "default": "'' COMMENT '显示名称'"
+        "comment": "显示名称",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "name",
+        "kind": "string",
+        "comment": "用户名",
+        "assert": null,
+        "default": null
       },
       {
         "name": "password_hash",
         "kind": "string",
-        "comment": "密码哈希"
+        "comment": "密码哈希",
+        "assert": null,
+        "default": null
       },
       {
         "name": "role",
         "kind": "string",
-        "comment": "",
-        "assert": "$value IN ['管理员', '店员']",
-        "default": "'店员' COMMENT '角色'"
-      },
-      {
-        "name": "created_at",
-        "kind": "datetime",
-        "comment": ""
-      }
-    ]
-  },
-  "agent_message": {
-    "name": "agent_message",
-    "fields": [
-      {
-        "name": "user_input",
-        "kind": "string",
-        "comment": "用户输入"
-      },
-      {
-        "name": "response",
-        "kind": "string",
-        "comment": "",
-        "default": "'' COMMENT 'Agent 回复'"
-      },
-      {
-        "name": "attachments",
-        "kind": "array",
-        "comment": "",
-        "default": "[] COMMENT '附件'"
-      },
-      {
-        "name": "actions",
-        "kind": "array",
-        "comment": "",
-        "default": "[] COMMENT 'Actions'"
-      },
-      {
-        "name": "status",
-        "kind": "string",
-        "comment": "",
-        "assert": "$value IN ['pending', 'processing', 'done', 'error']",
-        "default": "'pending' COMMENT '状态'"
-      },
-      {
-        "name": "session_id",
-        "kind": "string",
-        "comment": "会话ID"
-      },
-      {
-        "name": "created_by",
-        "kind": "record<user>",
-        "comment": "创建人"
-      },
-      {
-        "name": "created_at",
-        "kind": "datetime",
-        "comment": ""
-      },
-      {
-        "name": "processed_at",
-        "kind": "datetime",
-        "comment": "",
-        "default": "NONE COMMENT '处理时间'"
+        "comment": "角色",
+        "assert": "$value INSIDE ['管理员', '店员']",
+        "default": null
       }
     ]
   }

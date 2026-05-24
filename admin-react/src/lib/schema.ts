@@ -50,20 +50,36 @@ const HIDDEN_FIELDS = new Set(['id', 'password_hash', 'sync_source_id', 'synced_
 // 排序字段（始终显示在末尾）
 const TAIL_FIELDS = new Set(['created_at', 'updated_at', 'created_by'])
 
-export function getVisibleFields(fields: FieldMeta[]): { fields: FieldMeta[]; fetchClause: string } {
+export function getVisibleFields(fields: FieldMeta[], tableName?: string): { fields: FieldMeta[]; fetchClause: string } {
   const visible = fields.filter(f =>
     !f.name.startsWith('_') && !HIDDEN_FIELDS.has(f.name)
   )
   const head = visible.filter(f => !TAIL_FIELDS.has(f.name))
   const tail = visible.filter(f => TAIL_FIELDS.has(f.name))
   const sorted = [...head, ...tail]
-  return { fields: sorted, fetchClause: getFetchClause(fields) }
+  return { fields: sorted, fetchClause: getFetchClause(fields, tableName) }
 }
 
-export function getFetchClause(fields: FieldMeta[]): string {
+export function getFetchClause(fields: FieldMeta[], tableName?: string): string {
   const recordFields = fields.filter(f => f.isRecord && f.recordTarget)
   if (recordFields.length === 0) return ''
-  return `FETCH ${recordFields.map(f => f.name).join(', ')}`
+  
+  // 深层 FETCH 映射 — 某些表需要穿透到孙子节点
+  const deepFetch: Record<string, string[]> = {
+    store_inventory: ['variant.spu'],
+    inventory_count: ['variant.spu'],
+    restock_request: ['variant.spu'],
+    pricing: ['variant.spu'],
+    order_item: ['variant.spu', 'order.customer'],
+    featured_product: ['product.category'],
+  }
+  
+  const parts = recordFields.map(f => f.name)
+  if (tableName && deepFetch[tableName]) {
+    parts.push(...deepFetch[tableName])
+  }
+  
+  return `FETCH ${parts.join(', ')}`
 }
 
 // 菜单配置（从 menu-config.json 加载，有硬编码兜底）
@@ -111,7 +127,23 @@ export async function loadMenuConfig(): Promise<MenuGroup[]> {
   return _menuConfig
 }
 // 表名 → 中文标签
-const TABLE_LABELS: Record<string, { label: string; group: string }> = {}
+const TABLE_LABELS: Record<string, { label: string; group: string }> = {
+  product:             { label: '商品列表',    group: '商品管理' },
+  product_category:    { label: '产品类目',    group: '商品管理' },
+  product_variant:     { label: '产品SKU',     group: '_hidden' },
+  pricing:             { label: '定价',        group: '商品管理' },
+  store_inventory:     { label: '库存查看',    group: '库存管理' },
+  inventory_count:     { label: '盘点',        group: '库存管理' },
+  restock_request:     { label: '补货',        group: '库存管理' },
+  sales_order:         { label: '销售订单',    group: '日常销售' },
+  order_item:          { label: '订单明细',    group: '_hidden' },
+  customer:            { label: '会员列表',    group: '会员管理' },
+  user:                { label: '用户',        group: '_hidden' },
+  carousel:            { label: '轮播图',      group: '商城设置' },
+  featured_product:    { label: '推荐商品',    group: '商城设置' },
+  store_info:          { label: '流通处信息',  group: '商城设置' },
+  announcement:        { label: '公告',        group: '商城设置' },
+}
 export function getTableLabel(name: string): string {
   return TABLE_LABELS[name]?.label || name
 }
@@ -164,15 +196,30 @@ export function extractEnumOptions(assert: string | null): string[] {
   return (assert.match(/'([^']+)'/g) || []).map(s => s.slice(1, -1))
 }
 
+/** 格式化 record 对象 — 优先 SKU，穿透 spu 显示产品名 */
+function recordLabel(val: any): string {
+  if (!val || typeof val !== 'object') return String(val || '-')
+  if (val.sku) {
+    const spuName = val.spu?.name || ''
+    return spuName ? `${val.sku} [${spuName}]` : val.sku
+  }
+  if (val.spu?.name) return `${val.spu.name} · ${val.name || ''}`
+  return val.name || val.display_name || val.title || String(val.id || '-')
+}
+
 export function formatValue(value: any, field: FieldMeta): string {
-  if (value == null) return '-'
+  if (value == null || value === '') return '-'
   if (field.isRecord && typeof value === 'object' && value) {
-    return value.name || value.sku || value.display_name || String(value.id || '-')
+    return recordLabel(value)
   }
   if (field.kind === 'datetime') {
     const s = String(value)
     const m = s.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})/)
     return m ? `${m[1]} ${m[2]}` : s
+  }
+  if (field.kind.startsWith('array')) {
+    if (Array.isArray(value)) return value.length === 0 ? '-' : `${value.length} 项`
+    return String(value) || '-'
   }
   if (field.assert) {
     const opts = extractEnumOptions(field.assert)
@@ -242,7 +289,7 @@ export const extractEnumValues = extractEnumOptions
 // de() = 从 TableMeta 提取可见字段 + FETCH 子句
 export function de(meta: TableMeta | null): { fields: FieldMeta[]; fetchClause: string } {
   if (!meta) return { fields: [], fetchClause: '' }
-  return getVisibleFields(meta.fields)
+  return getVisibleFields(meta.fields, meta.name)
 }
 
 // v45 兼容：visibleFields 接受 TableMeta，返回 {fields, fetchClause}

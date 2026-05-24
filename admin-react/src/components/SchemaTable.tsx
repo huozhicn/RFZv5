@@ -21,20 +21,29 @@ export interface TableController {
 const LABEL_MAP: Record<string, string> = {
   'active': '激活', 'inactive': '禁用',
   '上架': '上架', '下架': '下架',
-  'pending': '待处理', 'done': '已完成',
+  'pending': '待同步', 'synced': '已同步', 'failed': '失败',
+  'done': '已完成',
   '已发货': '已发货', '待付款': '待付款', '已完成': '已完成', '已取消': '已取消',
+  '待处理': '待处理', '已处理': '已处理', '已拒绝': '已拒绝',
+  '管理员': '管理员', '店员': '店员',
+  '在线支付': '在线支付', '线下付款': '线下付款',
+  '商品': '商品', '活动': '活动',
 }
 
 function renderCell(row: any, field: FieldMeta): string {
   const val = row[field.name]
-  if (val === null || val === undefined) return '-'
+  if (val === null || val === undefined || val === '') return '-'
   if (field.isRecord && typeof val === 'object' && val !== null) {
     if (Array.isArray(val)) {
-      return val.map((v: any) => v.name || v.sku || v.title || v.display_name || v.id || '-').join(', ') || '-'
+      return val.map((v: any) => recordLabel(v)).join(', ') || '-'
     }
-    return val.name || val.sku || val.title || val.display_name || val.id || '-'
+    return recordLabel(val)
   }
   if (field.kind === 'datetime') return fmtDatetime(val)
+  if (field.kind.startsWith('array')) {
+    if (Array.isArray(val)) return val.length === 0 ? '-' : `${val.length} 项`
+    return String(val) || '-'
+  }
   if (field.assert) {
     const enums = extractEnumOptions(field.assert)
     if (enums.length > 0 && enums.length <= 8) {
@@ -43,6 +52,22 @@ function renderCell(row: any, field: FieldMeta): string {
   }
   if (typeof val === 'boolean') return val ? '是' : '否'
   return String(val)
+}
+
+/** 格式化 record 对象 — 优先 SKU，穿透 spu 显示产品名 */
+function recordLabel(val: any): string {
+  if (!val || typeof val !== 'object') return String(val || '-')
+  // 有 SKU 的记录 → 显示 SKU(规格名)，附加产品名
+  if (val.sku) {
+    const spuName = val.spu?.name || ''
+    const suffix = spuName ? ` [${spuName}]` : ''
+    return `${val.sku}${suffix}`
+  }
+  // 有 spu 的（如 inventory variant）→ 显示产品名-规格名
+  if (val.spu?.name) {
+    return `${val.spu.name} · ${val.name || ''}`
+  }
+  return val.name || val.display_name || val.title || String(val.id || '-')
 }
 
 function fmtDatetime(val: any): string {
