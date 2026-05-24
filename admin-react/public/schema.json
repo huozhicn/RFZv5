@@ -1,6 +1,8 @@
 {
   "announcement": {
     "name": "announcement",
+    "label": "公告",
+    "group": "store_settings",
     "fields": [
       {
         "name": "content",
@@ -34,6 +36,8 @@
   },
   "carousel": {
     "name": "carousel",
+    "label": "轮播图",
+    "group": "store_settings",
     "fields": [
       {
         "name": "created_at",
@@ -74,6 +78,8 @@
   },
   "customer": {
     "name": "customer",
+    "label": "会员列表",
+    "group": "crm",
     "fields": [
       {
         "name": "address",
@@ -128,6 +134,8 @@
   },
   "featured_product": {
     "name": "featured_product",
+    "label": "推荐商品",
+    "group": "store_settings",
     "fields": [
       {
         "name": "created_at",
@@ -154,6 +162,8 @@
   },
   "inventory_count": {
     "name": "inventory_count",
+    "label": "盘点",
+    "group": "inventory",
     "fields": [
       {
         "name": "actual_stock",
@@ -201,6 +211,8 @@
   },
   "pricing": {
     "name": "pricing",
+    "label": "定价",
+    "group": "product",
     "fields": [
       {
         "name": "created_at",
@@ -241,6 +253,8 @@
   },
   "product": {
     "name": "product",
+    "label": "商品列表",
+    "group": "product",
     "fields": [
       {
         "name": "base_price",
@@ -260,6 +274,13 @@
         "name": "category",
         "kind": "record<product_category>",
         "comment": "类目",
+        "assert": null,
+        "default": null
+      },
+      {
+        "name": "content_embedding",
+        "kind": "array<float>",
+        "comment": "语义搜索向量(bge-m3 1024维)",
         "assert": null,
         "default": null
       },
@@ -358,6 +379,8 @@
   },
   "product_category": {
     "name": "product_category",
+    "label": "产品类目",
+    "group": "product",
     "fields": [
       {
         "name": "created_at",
@@ -384,6 +407,8 @@
   },
   "product_variant": {
     "name": "product_variant",
+    "label": "产品SKU（子表，不在菜单显示）",
+    "group": "_hidden",
     "fields": [
       {
         "name": "base_price",
@@ -431,6 +456,8 @@
   },
   "restock_request": {
     "name": "restock_request",
+    "label": "补货",
+    "group": "inventory",
     "fields": [
       {
         "name": "created_at",
@@ -478,6 +505,8 @@
   },
   "sales_order": {
     "name": "sales_order",
+    "label": "销售订单",
+    "group": "sales",
     "fields": [
       {
         "name": "created_at",
@@ -553,6 +582,8 @@
   },
   "store_info": {
     "name": "store_info",
+    "label": "流通处信息",
+    "group": "store_settings",
     "fields": [
       {
         "name": "address",
@@ -607,6 +638,8 @@
   },
   "store_inventory": {
     "name": "store_inventory",
+    "label": "库存查看",
+    "group": "inventory",
     "fields": [
       {
         "name": "quantity",
@@ -633,6 +666,8 @@
   },
   "user": {
     "name": "user",
+    "label": "用户（不在菜单显示）",
+    "group": "_hidden",
     "fields": [
       {
         "name": "created_at",

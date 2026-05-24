@@ -127,7 +127,7 @@ v45 的问题不是代码量，是**角色 × 表 × 权限的笛卡尔积复杂
 
 1. **Schema-driven UI** — SchemaTable / DetailPanel 从 .surql 自动生成
 2. **ChatPanel + Agent** — 两段式 SQL 生成 → 执行 → 格式化
-3. **菜单分组** — DEFAULT_MENU 硬编码分组（sales/product/activity/inventory/crm/store_settings），schedule 文件中的 `-- @label` / `-- @group` 作为文档辅助
+3. **菜单从注释驱动** — `-- @label` / `-- @group`
 4. **FIELD_ZH 映射** — 所有字段名中文显示
 5. **配置外置** — LLM prompt / API Key 独立于代码
 6. **单一真相源** — .surql 是唯一的 schema 定义

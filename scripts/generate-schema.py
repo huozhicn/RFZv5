@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""从 VPS SurrealDB 生成 schema.json — 兼容两种字段格式"""
-import json, subprocess, sys, re
+"""从 VPS SurrealDB 生成 schema.json + 从 .surql 注释提取 @label/@group"""
+import json, subprocess, sys, re, os
+from pathlib import Path
 
 VPS = "ubuntu@212.64.90.2"
 VPS_PASS = "sFM@0@LhTY#Oi&"
 NS, DB = "huozhi", "rfv5_dist"
+SCHEMA_DIR = Path(__file__).resolve().parent.parent / "schema"
 
 def ssh(cmd):
     r = subprocess.run(["sshpass","-p",VPS_PASS,"ssh","-o","StrictHostKeyChecking=no",VPS, cmd],
@@ -51,12 +53,46 @@ def resolve_kind_from_define(s):
                 return p
     return type_str
 
+def parse_surql_annotations():
+    """Parse @label and @group from all .surql files. Returns {table_name: {label, group}}."""
+    annotations = {}
+    for fpath in sorted(SCHEMA_DIR.glob("*.surql")):
+        current_table = None
+        pending_label = None
+        pending_group = None
+        with open(fpath) as f:
+            for line in f:
+                line = line.strip()
+                # Capture @label / @group before DEFINE TABLE
+                m = re.match(r'-- @label (.+)', line)
+                if m:
+                    pending_label = m.group(1).strip()
+                    continue
+                m = re.match(r'-- @group (.+)', line)
+                if m:
+                    pending_group = m.group(1).strip()
+                    continue
+                # DEFINE TABLE — capture accumulated annotations
+                m = re.match(r'DEFINE TABLE (\w+)', line)
+                if m:
+                    tname = m.group(1)
+                    annotations[tname] = {
+                        'label': pending_label or tname,
+                        'group': pending_group or 'default',
+                    }
+                    pending_label = None
+                    pending_group = None
+    return annotations
+
 def gen():
     r = sdb("INFO FOR DB")
     if not r: return None
     tables = r.get("tables", {})
     skip = {"agent_message", "order_item"}
     schema = {}
+    
+    # Parse @label/@group from .surql files
+    annotations = parse_surql_annotations()
     
     for t in sorted(tables):
         if t in skip: continue
@@ -70,23 +106,29 @@ def gen():
             if ".*" in fn: continue
             
             if isinstance(fi, str):
-                # DEFINE FIELD string format
                 parsed = parse_define_field(fi)
                 if parsed:
                     fields.append(parsed)
             elif isinstance(fi, dict):
                 fields.append({
                     "name": fn,
-"kind": fi.get("kind", "string"),
+                    "kind": fi.get("kind", "string"),
                     "comment": fi.get("comment", ""),
                     "assert": fi.get("assert") or None,
                     "default": fi.get("default") or None,
                 })
         
-        schema[t] = {"name": t, "fields": fields}
+        ann = annotations.get(t, {})
+        schema[t] = {
+            "name": t,
+            "label": ann.get("label", t),
+            "group": ann.get("group", "default"),
+            "fields": fields,
+        }
         recs = [f["name"] for f in fields if f["kind"].startswith("record")]
-        print(f"{len(fields)}f records={recs}")
+        print(f"{len(fields)}f group={schema[t]['group']} records={recs}")
     
+    return schema
     return schema
 
 if __name__ == "__main__":
