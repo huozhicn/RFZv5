@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import { useCart } from '@/stores/cart'
+import { useCustomerAuth } from '@/stores/auth'
 import Home from '@/pages/Home'
 import ProductList from '@/pages/ProductList'
 import ProductDetail from '@/pages/ProductDetail'
@@ -8,19 +9,23 @@ import ActivityDetail from '@/pages/ActivityDetail'
 import Cart from '@/pages/Cart'
 import Checkout from '@/pages/Checkout'
 import OrderSuccess from '@/pages/OrderSuccess'
-import OrderLookup from '@/pages/OrderLookup'
+import Profile from '@/pages/Profile'
+import Login from '@/pages/Login'
+import EditProfile from '@/pages/EditProfile'
+import ChangePassword from '@/pages/ChangePassword'
 
 function TabBar() {
   const nav = useNavigate()
   const loc = useLocation()
   const cart = useCart()
+  const auth = useCustomerAuth()
 
   const tabs = [
     { path: '/', icon: '🏠', label: '首页' },
     { path: '/products', icon: '📂', label: '分类' },
     { path: '/activities', icon: '🎋', label: '活动' },
     { path: '/cart', icon: '🛒', label: '购物车', badge: cart.count },
-    { path: '/orders', icon: '👤', label: '我的' },
+    { path: '/orders', icon: auth.isLoggedIn ? '👤' : '👤', label: '我的' },
   ]
 
   return (
@@ -65,7 +70,10 @@ function AppShell() {
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/order/:id" element={<OrderSuccess />} />
-          <Route path="/orders" element={<OrderLookup />} />
+          <Route path="/orders" element={<Profile />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/profile/edit" element={<EditProfile />} />
+          <Route path="/profile/password" element={<ChangePassword />} />
         </Routes>
       </div>
       {showShell && <TabBar />}
@@ -75,6 +83,7 @@ function AppShell() {
 
 function TopNav() {
   const loc = useLocation()
+  const nav = useNavigate()
 
   const titles: Record<string, string> = {
     '/': '如法流通处',
@@ -82,6 +91,22 @@ function TopNav() {
     '/activities': '近期活动',
     '/cart': '购物车',
     '/orders': '我的',
+  }
+
+  // Pages with back button (no tab bar)
+  if (!FULL_SHELL.has(loc.pathname) && !loc.pathname.startsWith('/activity/')) {
+    const pageTitles: Record<string, string> = {
+      '/login': '登录',
+      '/profile/edit': '编辑资料',
+      '/profile/password': '修改密码',
+    }
+    return (
+      <div className="top-nav">
+        <button className="back-btn" onClick={() => nav(-1)}>←</button>
+        <h1>{pageTitles[loc.pathname] || ''}</h1>
+        <div style={{ width: 32 }} />
+      </div>
+    )
   }
 
   return (
