@@ -58,12 +58,12 @@ export default function App() {
 
 function AppShell() {
   const loc = useLocation()
-  const showShell = FULL_SHELL.has(loc.pathname) || loc.pathname.startsWith('/activity/')
+  const showTabs = FULL_SHELL.has(loc.pathname) || loc.pathname.startsWith('/activity/')
 
   return (
     <div className="app-shell">
-      {showShell && <TopNav />}
-      <div className="page-content" style={showShell ? {} : { paddingBottom: 76 }}>
+      <TopNav />
+      <div className="page-content" style={{ paddingBottom: showTabs ? 76 : 16 }}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/products" element={<ProductList />} />
@@ -82,7 +82,7 @@ function AppShell() {
           <Route path="/address" element={<AddressBook />} />
         </Routes>
       </div>
-      {showShell && <TabBar />}
+      {showTabs && <TabBar />}
     </div>
   )
 }
@@ -90,40 +90,50 @@ function AppShell() {
 function TopNav() {
   const loc = useLocation()
   const nav = useNavigate()
+  const isHome = loc.pathname === '/'
 
-  const titles: Record<string, string> = {
-    '/': '如法流通处',
-    '/products': '法宝分类',
-    '/activities': '近期活动',
-    '/cart': '购物车',
-    '/orders': '我的',
-  }
-
-  if (!FULL_SHELL.has(loc.pathname) && !loc.pathname.startsWith('/activity/')) {
-    const pageTitles: Record<string, string> = {
+  function getTitle(): string {
+    const staticTitles: Record<string, string> = {
+      '/': '如法流通处',
+      '/products': '法宝分类',
+      '/activities': '近期活动',
+      '/cart': '购物车',
+      '/orders': '我的',
       '/login': '登录',
       '/profile/edit': '编辑资料',
       '/profile/password': '修改密码',
       '/search': '搜索',
       '/store': '流通处介绍',
       '/address': '收货地址',
+      '/checkout': '确认下单',
     }
-    return (
-      <div className="top-nav">
-        <button className="back-btn" onClick={() => nav(-1)}>←</button>
-        <h1>{pageTitles[loc.pathname] || ''}</h1>
-        <div style={{ width: 32 }} />
-      </div>
-    )
+    if (staticTitles[loc.pathname]) return staticTitles[loc.pathname]
+    if (loc.pathname.startsWith('/product/')) return '商品详情'
+    if (loc.pathname.startsWith('/activity/')) return '活动详情'
+    if (loc.pathname.startsWith('/order/')) return '订单详情'
+    return ''
   }
 
-    return (
-      <div className="top-nav">
-        <h1>{titles[loc.pathname] || '如法流通处'}</h1>
-        {loc.pathname === '/' && (
-          <button onClick={() => nav('/search')} style={{ background: 'none', color: '#fff', fontSize: 20, padding: '4px 8px' }}>🔍</button>
-        )}
-        {loc.pathname !== '/' && <div style={{ width: 32 }} />}
-      </div>
-    )
+  const title = getTitle()
+
+  return (
+    <div className="top-nav">
+      {/* Left: home icon (hidden on home page itself) */}
+      {isHome ? (
+        <div style={{ width: 32 }} />
+      ) : (
+        <button onClick={() => nav('/')} style={{ background: 'none', color: '#fff', fontSize: 20, padding: '4px 8px', lineHeight: 1 }}
+          aria-label="回到首页">🏠</button>
+      )}
+      {/* Center: title */}
+      <h1 style={{ flex: 1, textAlign: 'center' }}>{title}</h1>
+      {/* Right: search icon */}
+      {loc.pathname === '/search' ? (
+        <div style={{ width: 32 }} />
+      ) : (
+        <button onClick={() => nav('/search')} style={{ background: 'none', color: '#fff', fontSize: 20, padding: '4px 8px', lineHeight: 1 }}
+          aria-label="搜索">🔍</button>
+      )}
+    </div>
+  )
 }
