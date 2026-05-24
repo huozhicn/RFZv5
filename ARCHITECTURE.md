@@ -127,7 +127,7 @@ v45 的问题不是代码量，是**角色 × 表 × 权限的笛卡尔积复杂
 
 1. **Schema-driven UI** — SchemaTable / DetailPanel 从 .surql 自动生成
 2. **ChatPanel + Agent** — 两段式 SQL 生成 → 执行 → 格式化
-3. **菜单从注释驱动** — `-- @label` / `-- @group`
+3. **菜单分组** — DEFAULT_MENU 硬编码分组（sales/product/activity/inventory/crm/store_settings），schedule 文件中的 `-- @label` / `-- @group` 作为文档辅助
 4. **FIELD_ZH 映射** — 所有字段名中文显示
 5. **配置外置** — LLM prompt / API Key 独立于代码
 6. **单一真相源** — .surql 是唯一的 schema 定义
@@ -137,7 +137,7 @@ v45 的问题不是代码量，是**角色 × 表 × 权限的笛卡尔积复杂
 - 6 种角色权限判断
 - 复杂的跨表 FETCH
 - tenant 字段（流通处不需要多租户，每个实例自己就是租户）
-- 多余的 30+ 张表（只保留流通处需要的 10 张左右）
+- 多余的 30+ 张表（只保留流通处需要的 16 张）
 
 ## 第一步：流通处最小闭环
 
