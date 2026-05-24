@@ -132,7 +132,7 @@ function Sidebar({ currentTable, onSelectTable, onLogout }: {
         )}
       </div>
       <div style={{ padding: '8px 20px', fontSize: 10, color: '#ffffff33' }}>
-        v.{(window as any).__COMMIT_HASH__ || 'dev'}
+        v.{__COMMIT_HASH__}
       </div>
     </div>
   )
