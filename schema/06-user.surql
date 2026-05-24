@@ -1,5 +1,5 @@
--- @label 用户
--- @group org
+-- @label 用户（不在菜单显示）
+-- @group _hidden
 DEFINE TABLE user SCHEMAFULL;
 DEFINE FIELD name ON user TYPE string COMMENT '用户名';
 DEFINE FIELD display_name ON user TYPE string DEFAULT '' COMMENT '显示名称';

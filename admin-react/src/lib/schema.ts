@@ -68,26 +68,30 @@ export function getFetchClause(fields: FieldMeta[]): string {
 
 // 菜单配置（从 menu-config.json 加载，有硬编码兜底）
 const DEFAULT_MENU: MenuGroup[] = [
+  { key: 'sales', label: '日常销售', tables: [
+    { key: 'sales_order', label: '销售订单' },
+  ]},
   { key: 'product', label: '商品管理', tables: [
-    { key: 'product', label: '产品SPU' },
-    { key: 'product_variant', label: '产品SKU' },
+    { key: 'product', label: '商品列表' },
     { key: 'product_category', label: '产品类目' },
     { key: 'pricing', label: '定价' },
   ]},
+  { key: 'activity', label: '活动运营', tables: [
+    { key: 'product:活动', label: '活动列表' },
+  ]},
   { key: 'inventory', label: '库存管理', tables: [
-    { key: 'store_inventory', label: '库存' },
+    { key: 'store_inventory', label: '库存查看' },
     { key: 'inventory_count', label: '盘点' },
     { key: 'restock_request', label: '补货' },
   ]},
-  { key: 'order', label: '订单管理', tables: [
-    { key: 'sales_order', label: '销售订单' },
-    { key: 'order_item', label: '订单明细' },
+  { key: 'crm', label: '会员管理', tables: [
+    { key: 'customer', label: '会员列表' },
   ]},
-  { key: 'crm', label: '客户管理', tables: [
-    { key: 'customer', label: '会员' },
-  ]},
-  { key: 'org', label: '系统管理', tables: [
-    { key: 'user', label: '用户' },
+  { key: 'store_settings', label: '商城设置', tables: [
+    { key: 'carousel', label: '轮播图' },
+    { key: 'featured_product', label: '推荐商品' },
+    { key: 'store_info', label: '流通处信息' },
+    { key: 'announcement', label: '公告' },
   ]},
 ]
 
@@ -123,7 +127,7 @@ const FIELD_ZH: Record<string, string> = {
   customer: '客户', phone: '电话', wechat: '微信', address: '地址',
   order: '订单', order_no: '订单号',
   sync_status: '同步状态', sync_source_id: '来源ID', synced_at: '同步时间',
-  is_active: '启用',
+  is_active: '启用', is_listed: '上架',
   diff: '差异', prev_stock: '盘前库存', actual_stock: '实盘库存',
   counted_by: '盘点人', counted_at: '盘点时间',
   main_image_url: '主图', detail_image_urls: '详情图',
@@ -132,6 +136,12 @@ const FIELD_ZH: Record<string, string> = {
   user_input: '用户输入', response: '回复', session_id: '会话ID',
   attachments: '附件', actions: '操作', processed_at: '处理时间',
   sort_order: '排序',
+  product_type: '类型', start_date: '开始日期', end_date: '截止日期',
+  cycle_description: '周期说明', capacity: '报名上限',
+  payment_method: '支付方式',
+  image_url: '图片地址', link_url: '跳转链接',
+  product: '商品', content: '内容',
+  business_hours: '营业时间', logo_url: 'Logo',
 }
 
 export function fieldLabel(field: FieldMeta): string {
@@ -145,6 +155,8 @@ const ENUM_LABELS: Record<string, string> = {
   '待处理': '待处理', '已处理': '已处理', '已拒绝': '已拒绝',
   'pending': '待同步', 'synced': '已同步', 'failed': '失败',
   '管理员': '管理员', '店员': '店员',
+  '在线支付': '在线支付', '线下付款': '线下付款',
+  '商品': '商品', '活动': '活动',
 }
 
 export function extractEnumOptions(assert: string | null): string[] {

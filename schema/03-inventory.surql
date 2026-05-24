@@ -1,4 +1,4 @@
--- @label 库存
+-- @label 库存查看
 -- @group inventory
 DEFINE TABLE store_inventory SCHEMAFULL;
 DEFINE FIELD variant ON store_inventory TYPE record<product_variant> COMMENT 'SKU';

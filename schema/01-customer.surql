@@ -1,4 +1,4 @@
--- @label 会员
+-- @label 会员列表
 -- @group crm
 DEFINE TABLE customer SCHEMAFULL;
 DEFINE FIELD name ON customer TYPE string COMMENT '姓名';

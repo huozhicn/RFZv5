@@ -9,6 +9,7 @@ interface Props {
   meta: TableMeta | null
   onRowClick: (recordId: string) => void
   onCreate?: () => void
+  defaultFilter?: { field: string; value: string }
 }
 
 export interface TableController {
@@ -51,7 +52,7 @@ function fmtDatetime(val: any): string {
   return m ? `${m[1]} ${m[2]}` : s
 }
 
-const SchemaTable = forwardRef<TableController, Props>(({ tableName, meta, onRowClick, onCreate }, ref) => {
+const SchemaTable = forwardRef<TableController, Props>(({ tableName, meta, onRowClick, onCreate, defaultFilter }, ref) => {
   const { token, tablePerms } = useAuth()
   const [rows, setRows] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
@@ -66,27 +67,34 @@ const SchemaTable = forwardRef<TableController, Props>(({ tableName, meta, onRow
     setLoading(true)
     try {
       const text = searchText.trim()
-      let where = ''
-      let vars: Record<string, unknown> | undefined
+      const parts: string[] = []
+      let vars: Record<string, unknown> = {}
       const { fetchClause } = meta ? de(meta) : { fetchClause: '' }
       const orderField = meta?.fields.some(f => f.name === 'created_at') ? 'created_at' : 'id'
       const orderDir = orderField === 'id' ? 'ASC' : 'DESC'
+
+      if (defaultFilter) {
+        parts.push(`${defaultFilter.field} = $filterVal`)
+        vars = { ...vars, filterVal: defaultFilter.value }
+      }
       if (text && meta) {
         const stringFields = meta.fields.filter(f => f.kind.includes('string') || f.kind.includes('text'))
         if (stringFields.length > 0) {
-          where = `WHERE (${stringFields.map(f => `${f.name} CONTAINS $search`).join(' OR ')})`
-          vars = { search: text }
+          parts.push(`(${stringFields.map(f => `${f.name} CONTAINS $search`).join(' OR ')})`)
+          vars = { ...vars, search: text }
         }
       }
+      const where = parts.length > 0 ? `WHERE ${parts.join(' AND ')}` : ''
+      const whereVars = Object.keys(vars).length > 0 ? vars : undefined
 
       const countSql = where
         ? `SELECT count() FROM ${tableName} ${where} GROUP ALL`
         : `SELECT count() FROM ${tableName} GROUP ALL`
-      const countResult = await sdbQuery(countSql, vars, token)
+      const countResult = await sdbQuery(countSql, whereVars, token)
       setTotalCount(countResult?.[0]?.count ?? 0)
 
       const dataSql = `SELECT * FROM ${tableName} ${where} ORDER BY ${orderField} ${orderDir} LIMIT ${PAGE_SIZE} START ${(page - 1) * PAGE_SIZE} ${fetchClause}`
-      const data = await sdbQuery(dataSql, vars, token) || []
+      const data = await sdbQuery(dataSql, whereVars, token) || []
       setRows(data)
     } catch (err: any) {
       console.error(`[SchemaTable] ${tableName}:`, err.message)

@@ -12,7 +12,7 @@ function HomePage() {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', flexDirection: 'column', color: '#999' }}>
       <div style={{ fontSize: 64, marginBottom: 16 }}>📦</div>
-      <div style={{ fontSize: 22, fontWeight: 600, color: '#333', marginBottom: 8 }}>流通处管理系统</div>
+      <div style={{ fontSize: 22, fontWeight: 600, color: '#333', marginBottom: 8 }}>流通处管理后台</div>
       <div style={{ fontSize: 14 }}>选择左侧菜单开始操作，或在右侧对话中输入指令</div>
       <div style={{ fontSize: 12, marginTop: 8, color: '#bbb' }}>试试：「看库存」「新建订单」</div>
     </div>
@@ -20,15 +20,18 @@ function HomePage() {
 }
 
 // ── 表页面 ──
-function TablePage({ tableName, tableRefs, detailCtrl }: {
+function TablePage({ tableName, tableRefs, detailCtrl, defaultFilter }: {
   tableName: string
   tableRefs: React.MutableRefObject<Map<string, TableController>>
   detailCtrl: DetailController
+  defaultFilter?: string
 }) {
   const meta = getTableMeta(tableName)
   const [detailMode, setDetailMode] = useState<'view' | 'create' | null>(null)
   const [detailRecordId, setDetailRecordId] = useState<string | null>(null)
   const [detailPrefill, setDetailPrefill] = useState<Record<string, any>>({})
+
+  const filterProp = defaultFilter ? { field: 'product_type', value: defaultFilter } : undefined
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
@@ -42,6 +45,7 @@ function TablePage({ tableName, tableRefs, detailCtrl }: {
           meta={meta || null}
           onRowClick={(id) => { setDetailMode('view'); setDetailRecordId(id) }}
           onCreate={() => { setDetailMode('create'); setDetailRecordId(null); setDetailPrefill({}) }}
+          defaultFilter={filterProp}
         />
       </div>
       <DetailPanel
@@ -72,7 +76,7 @@ function Sidebar({ currentTable, onSelectTable, onLogout }: {
 
   useEffect(() => {
     for (const g of menuGroups) {
-      if (g.tables.some((t: any) => t.key === currentTable)) {
+      if (g.tables.some((t: any) => t.key.split(':')[0] === currentTable)) {
         setExpandedGroups(prev => new Set([...prev, g.key]))
         break
       }
@@ -90,7 +94,7 @@ function Sidebar({ currentTable, onSelectTable, onLogout }: {
   return (
     <div style={{ width: 220, minWidth: 220, background: '#001529', color: '#fff', display: 'flex', flexDirection: 'column', height: '100vh' }}>
       <div style={{ padding: '16px 20px', fontSize: 18, fontWeight: 700, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-        RFZv5 <span style={{ fontSize: 12, fontWeight: 400, color: '#ffffff88' }}>流通处</span>
+        流通处 <span style={{ fontSize: 12, fontWeight: 400, color: '#ffffff88' }}>管理后台</span>
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
         {menuGroups.map((group: any) => (
@@ -102,7 +106,7 @@ function Sidebar({ currentTable, onSelectTable, onLogout }: {
             </div>
             {expandedGroups.has(group.key) && group.tables.map((table: any) => (
               <div key={table.key} onClick={() => onSelectTable(table.key)}
-                style={{ padding: '8px 20px 8px 36px', cursor: 'pointer', fontSize: 13, color: currentTable === table.key ? '#fff' : '#ffffff88', background: currentTable === table.key ? '#1677ff' : '' }}>
+                style={{ padding: '8px 20px 8px 36px', cursor: 'pointer', fontSize: 13, color: currentTable === table.key.split(':')[0] ? '#fff' : '#ffffff88', background: currentTable === table.key.split(':')[0] ? '#1677ff' : '' }}>
                 {table.label}
               </div>
             ))}
@@ -154,8 +158,10 @@ function AppInner() {
     },
   }
 
-  function handleSelectTable(key: string) {
+  function handleSelectTable(rawKey: string) {
+    const [key, filter] = rawKey.split(':')
     setCurrentTable(key)
+    setTableFilter(filter || '')
     nav('/tables/' + key)
   }
 
@@ -164,6 +170,7 @@ function AppInner() {
     nav('/login')
   }
   const [schemaReady, setSchemaReady] = useState(false)
+  const [tableFilter, setTableFilter] = useState('')
 
   // Load data on mount
   useEffect(() => {
@@ -190,7 +197,7 @@ function AppInner() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/tables/:tableName" element={<TablePage key={`${currentTable}-${schemaReady}`} tableName={currentTable} tableRefs={tableRefs} detailCtrl={detailCtrl} />} />
+          <Route path="/tables/:tableName" element={<TablePage key={`${currentTable}-${schemaReady}`} tableName={currentTable} tableRefs={tableRefs} detailCtrl={detailCtrl} defaultFilter={tableFilter} />} />
         </Routes>
       </div>
       <ChatPanel tableRefs={tableRefs} currentTable={currentTable} detailCtrl={detailCtrl} />
@@ -230,7 +237,7 @@ function LoginPage() {
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#f0f2f5' }}>
       <div style={{ width: 380, padding: 32, background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
         <h2 style={{ textAlign: 'center', margin: '0 0 24px', fontWeight: 600 }}>
-          流通处管理 <span style={{ color: '#999', fontSize: 14, fontWeight: 400 }}>RFZv5</span>
+          流通处管理 <span style={{ color: '#999', fontSize: 14, fontWeight: 400 }}>后台</span>
         </h2>
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: 16 }}>

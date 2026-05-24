@@ -1,4 +1,4 @@
--- @label 补货申请
+-- @label 补货
 -- @group inventory
 DEFINE TABLE restock_request SCHEMAFULL;
 DEFINE FIELD variant ON restock_request TYPE record<product_variant> COMMENT 'SKU';
