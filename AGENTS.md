@@ -85,5 +85,64 @@ INSERT INTO agent_message {
 ```bash
 cd admin-react && npm run build
 bash deploy.sh
-bash schema/import-schema.sh
+bash import-schema.sh
+```
+
+## H5 商城
+
+独立部署在 `m.rufazao.com`，前端直连 SDB（visitor 只读 + 订单直写）。
+
+### 页面清单 (15 页)
+
+| 页面 | 路由 | TabBar | 说明 |
+|------|------|:---:|------|
+| 首页 | `/` | ✅ | 轮播、分类、活动横滑、推荐、公告 |
+| 商品列表 | `/products` | ✅ | 分类Tab + 活动Tab + 搜索 |
+| 商品详情 | `/product/:id` | - | 变体选择 + 加购 |
+| 活动列表 | `/activities` | ✅ | 进行中/往期分区 |
+| 活动详情 | `/activity/:id` | - | 直接报名弹窗（不经过购物车） |
+| 购物车 | `/cart` | ✅ | localStorage |
+| 确认下单 | `/checkout` | - | 地址选择 + 支付方式 |
+| 订单详情 | `/order/:id` | - | 需登录或 just_placed_order token |
+| 我的 | `/orders` | ✅ | 登录后看订单/活动报名 |
+| 登录 | `/login` | - | 手机号+密码 |
+| 编辑资料 | `/profile/edit` | - | |
+| 修改密码 | `/profile/password` | - | |
+| 搜索 | `/search` | - | CONTAINS 全文搜索 |
+| 流通处介绍 | `/store` | - | 静态页 |
+| 收货地址 | `/address` | - | 多地址管理 |
+
+### 导航规则
+
+- **所有页面**统一顶部三栏导航：`🏠 回家` | `标题居中` | `🔍 搜索`
+- 首页不显示🏠（已在首页），搜索页不显示🔍（避免死循环）
+- TabBar 只在 5 个主页面显示
+
+### 安全规则
+
+- 订单详情强制鉴权——未登录重定向到 `/login`
+- 登录用户只能查看自己的订单（`WHERE customer=$cid`）
+- 未登录用户下单/报名后通过 `sessionStorage just_placed_order` token 临时查看
+- 禁止匿名手机号查订单
+
+## SDB 3.0 常见坑
+
+### ORDER BY 字段必须在 SELECT 中
+
+```sql
+-- ❌ 错误：SDB 3.0 报 400 "Missing order idiom"
+SELECT id, name FROM product ORDER BY created_at DESC
+
+-- ✅ 正确
+SELECT id, name, created_at FROM product ORDER BY created_at DESC
+```
+
+### record<> 字段插值不加引号
+
+```sql
+-- ❌ 错误
+customer: 'user:admin'
+
+-- ✅ 正确
+customer: user:admin
 ```

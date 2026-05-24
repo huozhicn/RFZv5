@@ -44,7 +44,7 @@ export default function Search() {
 
     try {
       const rows = await sdbQuery<any[]>(
-        `SELECT id, name, main_image_url, product_type FROM product WHERE is_listed=true AND name CONTAINS '${term.replace(/'/g, "\\'")}' ORDER BY created_at DESC LIMIT 20`
+        `SELECT id, name, main_image_url, product_type, created_at FROM product WHERE is_listed=true AND name CONTAINS '${term.replace(/'/g, "\\'")}' ORDER BY created_at DESC LIMIT 20`
       )
       if (!rows) { setResults([]); return }
       const list: ProductResult[] = []

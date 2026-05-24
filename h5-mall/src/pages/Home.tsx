@@ -11,7 +11,7 @@ interface CategoryItem { id: string; name: string }
 interface ProductItem { id: string; name: string; main_image_url: string }
 interface ProductWithPrice extends ProductItem { price: number; variantId: string }
 interface StoreInfo { name: string; address: string; phone: string; business_hours: string; description: string; logo_url?: string }
-interface AnnounceItem { id: string; title: string; content: string }
+interface AnnounceItem { id: string; title: string; content: string; link_type?: string; link_target?: string }
 interface ActivityItem {
   id: string; name: string; main_image_url: string; base_price: number
   start_date?: string; end_date?: string; cycle_description?: string
@@ -38,7 +38,7 @@ export default function Home() {
         sdbQuery<any[]>('SELECT id, name, sort_order FROM product_category ORDER BY sort_order'),
         sdbQuery<any[]>('SELECT id, product.name AS product_name, product.main_image_url, product.id AS productId, sort_order FROM featured_product ORDER BY sort_order LIMIT 6 FETCH product'),
         sdbQuery<any[]>('SELECT * FROM store_info LIMIT 1'),
-        sdbQuery<any[]>('SELECT id, title, content, created_at FROM announcement WHERE is_active=true ORDER BY created_at DESC LIMIT 3'),
+        sdbQuery<any[]>('SELECT id, title, content, link_type, link_target, created_at FROM announcement WHERE is_active=true ORDER BY created_at DESC LIMIT 3'),
         sdbQuery<any[]>(`SELECT id, name, main_image_url, base_price, start_date, end_date, cycle_description, capacity, created_at FROM product WHERE product_type='活动' AND is_listed=true ORDER BY created_at DESC LIMIT 10`),
       ])
       setCarousels(carouselRes || [])
@@ -216,15 +216,27 @@ export default function Home() {
       {announcements.length > 0 && (
         <div style={{ marginTop: 24 }}>
           <div className="section-header"><h2>公告</h2></div>
-          {announcements.map(a => (
-            <div key={a.id} className="announce-bar">
-              <span className="ann-icon">📢</span>
-              <div>
-                <div style={{ fontWeight: 500, marginBottom: 2 }}>{a.title}</div>
-                <div style={{ fontSize: 12, color: '#999' }}>{a.content}</div>
+          {announcements.map(a => {
+            function handleClick() {
+              if (a.link_type === 'activity' && a.link_target) {
+                nav(`/activity/${a.link_target}`)
+              } else if (a.link_type === 'product' && a.link_target) {
+                nav(`/product/${a.link_target}`)
+              }
+            }
+            return (
+              <div key={a.id} className="announce-bar"
+                onClick={handleClick}
+                style={{ cursor: (a.link_type && a.link_target) ? 'pointer' : 'default' }}>
+                <span className="ann-icon">📢</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 500, marginBottom: 2 }}>{a.title}</div>
+                  <div style={{ fontSize: 12, color: '#999' }}>{a.content}</div>
+                </div>
+                {(a.link_type && a.link_target) && <span style={{ color: '#c41e3a', fontSize: 13 }}>›</span>}
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 

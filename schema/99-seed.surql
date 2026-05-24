@@ -83,8 +83,8 @@ CREATE carousel:c1 CONTENT { image_url: '', link_url: '', sort_order: 1, is_acti
 CREATE carousel:c2 CONTENT { image_url: '', link_url: '', sort_order: 2, is_active: true };
 CREATE carousel:c3 CONTENT { image_url: '', link_url: '', sort_order: 3, is_active: true };
 
-CREATE announcement:a1 CONTENT { title: '端午节祈福法会报名开始', content: '6月1日-5日，恭请法师领众诵经祈福。名额有限，提前报名。', is_active: true };
-CREATE announcement:a2 CONTENT { title: '每周五禅修雅集恢复通知', content: '自6月起每周五晚7点明慧法师带领禅修。欢迎参加，随喜。', is_active: true };
+CREATE announcement:a1 CONTENT { title: '端午节祈福法会报名开始', content: '6月1日-5日，恭请法师领众诵经祈福。名额有限，提前报名。', is_active: true, link_type: 'activity', link_target: product:p_act1 };
+CREATE announcement:a2 CONTENT { title: '每周五禅修雅集恢复通知', content: '自6月起每周五晚7点明慧法师带领禅修。欢迎参加，随喜。', is_active: true, link_type: 'activity', link_target: product:p_act2 };
 
 CREATE featured_product:fp1 CONTENT { product: product:p_nz1, sort_order: 1 };
 CREATE featured_product:fp2 CONTENT { product: product:p_x1,  sort_order: 2 };

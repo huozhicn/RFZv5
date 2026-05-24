@@ -34,3 +34,5 @@ DEFINE FIELD title ON announcement TYPE string COMMENT '标题';
 DEFINE FIELD content ON announcement TYPE string COMMENT '内容';
 DEFINE FIELD is_active ON announcement TYPE bool DEFAULT true COMMENT '启用';
 DEFINE FIELD created_at ON announcement TYPE datetime DEFAULT time::now();
+DEFINE FIELD link_type ON announcement TYPE option<string> COMMENT '跳转类型: product/activity';
+DEFINE FIELD link_target ON announcement TYPE option<record> COMMENT '跳转目标 record ID';

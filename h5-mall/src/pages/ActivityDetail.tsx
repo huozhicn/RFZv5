@@ -104,6 +104,7 @@ export default function ActivityDetail() {
       )
       await sdbQuery(`UPDATE store_inventory SET quantity = quantity - 1 WHERE variant=${variant.id}`)
 
+      sessionStorage.setItem('just_placed_order', orderId)
       nav(`/order/${orderId}`, { replace: true })
     } catch (err: any) {
       setError(err.message || '报名失败，请重试')
