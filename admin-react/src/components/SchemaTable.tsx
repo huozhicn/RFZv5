@@ -102,25 +102,56 @@ const SchemaTable = forwardRef<TableController, Props>(({ tableName, meta, onRow
         parts.push(`${defaultFilter.field} = $filterVal`)
         vars = { ...vars, filterVal: defaultFilter.value }
       }
-      if (text && meta) {
-        const stringFields = meta.fields.filter(f => f.kind.includes('string') || f.kind.includes('text'))
-        if (stringFields.length > 0) {
-          parts.push(`(${stringFields.map(f => `${f.name} CONTAINS $search`).join(' OR ')})`)
-          vars = { ...vars, search: text }
-        }
+
+      let useVector = false
+      if (text && tableName === 'product') {
+        // 向量搜索: 调 embed proxy → SDB HNSW
+        try {
+          const resp = await fetch('/api/embed', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text }),
+          })
+          if (resp.ok) {
+            const { vector } = await resp.json()
+            if (vector && vector.length === 1024) {
+              const vecJson = JSON.stringify(vector)
+              const where = parts.length > 0
+                ? `WHERE ${parts.join(' AND ')} AND content_embedding <|20,20|> ${vecJson}`
+                : `WHERE content_embedding <|20,20|> ${vecJson}`
+
+              // 向量搜索用 KNN 排序(距离升序)，跳过传统 ORDER/LIMIT/START
+              const dataSql = `SELECT * FROM ${tableName} ${where} LIMIT ${PAGE_SIZE} START ${(page - 1) * PAGE_SIZE} ${fetchClause}`
+              const data = await sdbQuery(dataSql, undefined, token) || []
+              setRows(data)
+              setTotalCount(data.length) // KNN 无 count 查询
+              useVector = true
+            }
+          }
+        } catch { /* 回退到 CONTAINS */ }
       }
-      const where = parts.length > 0 ? `WHERE ${parts.join(' AND ')}` : ''
-      const whereVars = Object.keys(vars).length > 0 ? vars : undefined
 
-      const countSql = where
-        ? `SELECT count() FROM ${tableName} ${where} GROUP ALL`
-        : `SELECT count() FROM ${tableName} GROUP ALL`
-      const countResult = await sdbQuery(countSql, whereVars, token)
-      setTotalCount(countResult?.[0]?.count ?? 0)
+      if (!useVector) {
+        if (text && meta) {
+          const stringFields = meta.fields.filter(f => f.kind.includes('string') || f.kind.includes('text'))
+          if (stringFields.length > 0) {
+            parts.push(`(${stringFields.map(f => `${f.name} CONTAINS $search`).join(' OR ')})`)
+            vars = { ...vars, search: text }
+          }
+        }
+        const where = parts.length > 0 ? `WHERE ${parts.join(' AND ')}` : ''
+        const whereVars = Object.keys(vars).length > 0 ? vars : undefined
 
-      const dataSql = `SELECT * FROM ${tableName} ${where} ORDER BY ${orderField} ${orderDir} LIMIT ${PAGE_SIZE} START ${(page - 1) * PAGE_SIZE} ${fetchClause}`
-      const data = await sdbQuery(dataSql, whereVars, token) || []
-      setRows(data)
+        const countSql = where
+          ? `SELECT count() FROM ${tableName} ${where} GROUP ALL`
+          : `SELECT count() FROM ${tableName} GROUP ALL`
+        const countResult = await sdbQuery(countSql, whereVars, token)
+        setTotalCount(countResult?.[0]?.count ?? 0)
+
+        const dataSql = `SELECT * FROM ${tableName} ${where} ORDER BY ${orderField} ${orderDir} LIMIT ${PAGE_SIZE} START ${(page - 1) * PAGE_SIZE} ${fetchClause}`
+        const data = await sdbQuery(dataSql, whereVars, token) || []
+        setRows(data)
+      }
     } catch (err: any) {
       console.error(`[SchemaTable] ${tableName}:`, err.message)
       setRows([])

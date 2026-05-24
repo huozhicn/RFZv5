@@ -22,3 +22,9 @@ runtime:
   max_concurrent: 10
   backlog_limit: 20
   poll_fallback_seconds: 2
+
+siliconflow:
+  api_key: sk-hywcabjmlphrzdijnvajbrjknzaujfbvoccmkrcdmkopxsyw
+  model: Pro/BAAI/bge-m3
+  base_url: https://api.siliconflow.cn/v1
+  port: 19901
