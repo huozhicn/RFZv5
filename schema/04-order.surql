@@ -8,7 +8,7 @@ DEFINE FIELD status ON sales_order TYPE string ASSERT $value IN ['待付款', '�
 DEFINE FIELD payment_method ON sales_order TYPE string ASSERT $value IN ['在线支付', '线下付款'] DEFAULT '在线支付' COMMENT '支付方式';
 DEFINE FIELD notes ON sales_order TYPE string DEFAULT '' COMMENT '备注';
 DEFINE FIELD sync_status ON sales_order TYPE string ASSERT $value IN ['pending', 'synced', 'failed'] DEFAULT 'pending' COMMENT '同步状态';
-DEFINE FIELD synced_at ON sales_order TYPE datetime DEFAULT NONE COMMENT '同步时间';
+DEFINE FIELD synced_at ON sales_order TYPE option<datetime> DEFAULT NONE COMMENT '同步时间';
 DEFINE FIELD created_by ON sales_order TYPE record<user> COMMENT '操作人';
 DEFINE FIELD created_at ON sales_order TYPE datetime DEFAULT time::now();
 
