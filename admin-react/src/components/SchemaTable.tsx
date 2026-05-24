@@ -116,12 +116,15 @@ const SchemaTable = forwardRef<TableController, Props>(({ tableName, meta, onRow
             const { vector } = await resp.json()
             if (vector && vector.length === 1024) {
               const vecJson = JSON.stringify(vector)
-              const where = parts.length > 0
-                ? `WHERE ${parts.join(' AND ')} AND content_embedding <|20,20|> ${vecJson}`
-                : `WHERE content_embedding <|20,20|> ${vecJson}`
-
-              // 向量搜索用 KNN 排序(距离升序)，跳过传统 ORDER/LIMIT/START
-              const dataSql = `SELECT * FROM ${tableName} ${where} LIMIT ${PAGE_SIZE} START ${(page - 1) * PAGE_SIZE} ${fetchClause}`
+              
+              // SDB 3.0 KNN + WHERE 组合有 bug，用子查询先过滤再 KNN
+              let dataSql: string
+              if (parts.length > 0) {
+                const filterWhere = `WHERE ${parts.join(' AND ')}`
+                dataSql = `SELECT * FROM (SELECT * FROM ${tableName} ${filterWhere}) WHERE content_embedding <|${PAGE_SIZE},20|> ${vecJson} LIMIT ${PAGE_SIZE} ${fetchClause}`
+              } else {
+                dataSql = `SELECT * FROM ${tableName} WHERE content_embedding <|${PAGE_SIZE},20|> ${vecJson} LIMIT ${PAGE_SIZE} ${fetchClause}`
+              }
               const data = await sdbQuery(dataSql, undefined, token) || []
               setRows(data)
               setTotalCount(data.length) // KNN 无 count 查询
